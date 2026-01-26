@@ -1,5 +1,44 @@
 export type PropertyType = 'house' | 'flat' | 'studio' | 'room' | 'other'
-export type UserRole = 'tenant' | 'landlord' | 'agent' | 'contractor'
+export type UserRole = 'landlord' | 'tenant' | 'contractor'
+
+export const UserRoleInfo: Record<UserRole, { displayName: string; description: string; icon: string }> = {
+  landlord: {
+    displayName: 'Landlord',
+    description: 'Property owner with full management access',
+    icon: 'Building2'
+  },
+  tenant: {
+    displayName: 'Tenant',
+    description: 'Renter with view access and issue reporting',
+    icon: 'User'
+  },
+  contractor: {
+    displayName: 'Contractor',
+    description: 'Tradesperson with access to assigned work',
+    icon: 'Wrench'
+  }
+}
+
+export type Permission = 
+  | 'view_property' | 'edit_property' | 'manage_rooms' | 'manage_tenancies'
+  | 'manage_documents' | 'manage_reminders' | 'view_issues' | 'manage_issues'
+  | 'report_issues' | 'view_assigned_issues' | 'update_issue_status'
+  | 'take_photos' | 'view_documents' | 'export_pdf' | 'invite_users' | 'messaging'
+
+export const RolePermissions: Record<UserRole, Permission[]> = {
+  landlord: [
+    'view_property', 'edit_property', 'manage_rooms', 'manage_tenancies',
+    'manage_documents', 'manage_reminders', 'view_issues', 'manage_issues',
+    'take_photos', 'export_pdf', 'invite_users', 'messaging'
+  ],
+  tenant: [
+    'view_property', 'view_issues', 'report_issues', 'take_photos',
+    'view_documents', 'messaging'
+  ],
+  contractor: [
+    'view_assigned_issues', 'update_issue_status', 'take_photos', 'messaging'
+  ]
+}
 export type RentFrequency = 'weekly' | 'monthly'
 export type DepositScheme = 'dps' | 'tds' | 'mydeposits' | 'other'
 export type TenancyStatus = 'active' | 'pending' | 'ended'

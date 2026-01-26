@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Enums
 CREATE TYPE property_type AS ENUM ('house', 'flat', 'studio', 'room', 'other');
-CREATE TYPE user_role AS ENUM ('tenant', 'landlord', 'agent', 'contractor');
+CREATE TYPE user_role AS ENUM ('landlord', 'tenant', 'contractor');
 CREATE TYPE rent_frequency AS ENUM ('weekly', 'monthly');
 CREATE TYPE deposit_scheme AS ENUM ('dps', 'tds', 'mydeposits', 'other');
 CREATE TYPE tenancy_status AS ENUM ('active', 'pending', 'ended');
