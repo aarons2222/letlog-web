@@ -47,6 +47,33 @@ export type IssueStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
 export type ReminderType = 'gas_safety' | 'eicr' | 'epc' | 'smoke_alarm' | 'co_alarm' | 'boiler_service' | 'insurance' | 'custom'
 export type DocumentType = 'tenancy_agreement' | 'inventory' | 'gas_certificate' | 'eicr' | 'epc' | 'insurance' | 'receipt' | 'other'
 
+// Trade categories for contractors
+export type TradeCategory = 
+  | 'plumbing' | 'electrical' | 'gas' | 'heating' | 'roofing'
+  | 'carpentry' | 'painting' | 'locksmith' | 'appliances' | 'cleaning'
+  | 'gardening' | 'pest_control' | 'glazing' | 'flooring' | 'general'
+
+export const TradeCategoryInfo: Record<TradeCategory, { displayName: string; icon: string }> = {
+  plumbing: { displayName: 'Plumbing', icon: 'Droplets' },
+  electrical: { displayName: 'Electrical', icon: 'Zap' },
+  gas: { displayName: 'Gas', icon: 'Flame' },
+  heating: { displayName: 'Heating & HVAC', icon: 'Thermometer' },
+  roofing: { displayName: 'Roofing', icon: 'Home' },
+  carpentry: { displayName: 'Carpentry', icon: 'Hammer' },
+  painting: { displayName: 'Painting & Decorating', icon: 'Paintbrush' },
+  locksmith: { displayName: 'Locksmith', icon: 'Key' },
+  appliances: { displayName: 'Appliance Repair', icon: 'Refrigerator' },
+  cleaning: { displayName: 'Cleaning', icon: 'Sparkles' },
+  gardening: { displayName: 'Gardening', icon: 'TreeDeciduous' },
+  pest_control: { displayName: 'Pest Control', icon: 'Bug' },
+  glazing: { displayName: 'Glazing & Windows', icon: 'LayoutGrid' },
+  flooring: { displayName: 'Flooring', icon: 'Grid3x3' },
+  general: { displayName: 'General Maintenance', icon: 'Wrench' }
+}
+
+export type QuoteStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'expired'
+export type TenderStatus = 'not_tendered' | 'open' | 'quoted' | 'assigned' | 'completed'
+
 export interface Profile {
   id: string
   email: string | null
@@ -135,8 +162,16 @@ export interface Issue {
   assigned_to: string | null
   resolved_at: string | null
   resolution_notes: string | null
+  // Tender fields
+  trade_category: TradeCategory | null
+  tender_status: TenderStatus
+  tender_deadline: string | null
+  budget_min: number | null
+  budget_max: number | null
   created_at: string
   updated_at: string
+  // Relations
+  quotes?: Quote[]
 }
 
 export interface Document {
@@ -175,6 +210,74 @@ export interface Message {
   content: string
   is_read: boolean
   created_at: string
+}
+
+export interface ContractorProfile {
+  id: string
+  user_id: string
+  company_name: string | null
+  description: string | null
+  trades: TradeCategory[]
+  coverage_postcodes: string[]
+  hourly_rate: number | null
+  call_out_fee: number | null
+  insurance_number: string | null
+  insurance_expiry: string | null
+  gas_safe_number: string | null
+  gas_safe_expiry: string | null
+  rating: number
+  total_reviews: number
+  total_jobs_completed: number
+  verified: boolean
+  verified_at: string | null
+  available: boolean
+  created_at: string
+  updated_at: string
+  // Relations
+  profile?: Profile
+  quotes?: Quote[]
+  reviews?: ContractorReview[]
+}
+
+export interface Quote {
+  id: string
+  issue_id: string
+  contractor_id: string
+  amount: number
+  description: string
+  estimated_hours: number | null
+  materials_included: boolean
+  materials_cost: number | null
+  availability_date: string | null
+  availability_notes: string | null
+  warranty_days: number
+  status: QuoteStatus
+  accepted_at: string | null
+  rejected_at: string | null
+  landlord_notes: string | null
+  created_at: string
+  updated_at: string
+  // Relations
+  contractor?: ContractorProfile
+  issue?: Issue
+}
+
+export interface ContractorReview {
+  id: string
+  contractor_id: string
+  issue_id: string | null
+  reviewer_id: string
+  rating: number
+  title: string | null
+  comment: string | null
+  would_recommend: boolean
+  response: string | null
+  response_at: string | null
+  created_at: string
+  // Relations
+  contractor?: ContractorProfile
+  reviewer?: Profile
+  issue?: Issue
 }
 
 export interface Database {
