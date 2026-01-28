@@ -384,27 +384,20 @@ export default function Home() {
             <div>
               <h4 className="font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-slate-400 text-sm">
-                <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
+                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
                 <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                <li><Link href="/demo" className="hover:text-white transition-colors">Demo</Link></li>
-                <li><Link href="/changelog" className="hover:text-white transition-colors">Changelog</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Company</h4>
+              <h4 className="font-semibold mb-4">Resources</h4>
               <ul className="space-y-2 text-slate-400 text-sm">
-                <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
                 <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
-                <li><Link href="/careers" className="hover:text-white transition-colors">Careers</Link></li>
-                <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
+              <h4 className="font-semibold mb-4">Contact</h4>
               <ul className="space-y-2 text-slate-400 text-sm">
-                <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
-                <li><Link href="/gdpr" className="hover:text-white transition-colors">GDPR</Link></li>
+                <li><a href="mailto:support@letlog.co.uk" className="hover:text-white transition-colors">support@letlog.co.uk</a></li>
               </ul>
             </div>
           </div>
