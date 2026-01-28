@@ -35,7 +35,7 @@ export default function Home() {
             </div>
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-slate-300 hover:text-white transition-colors">Features</a>
-              <a href="#pricing" className="text-slate-300 hover:text-white transition-colors">Pricing</a>
+              <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">Pricing</Link>
               <a href="#testimonials" className="text-slate-300 hover:text-white transition-colors">Testimonials</a>
               <a href="#faq" className="text-slate-300 hover:text-white transition-colors">FAQ</a>
             </div>
@@ -385,7 +385,7 @@ export default function Home() {
               <h4 className="font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-slate-400 text-sm">
                 <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
-                <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+                <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
                 <li><Link href="/demo" className="hover:text-white transition-colors">Demo</Link></li>
                 <li><Link href="/changelog" className="hover:text-white transition-colors">Changelog</Link></li>
               </ul>
