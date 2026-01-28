@@ -293,34 +293,33 @@ export default function Home() {
               ]}
             />
             <PricingCard 
-              name="Pro"
+              name="Basic"
+              price="£4.99"
+              period="per month"
+              description="For small landlords"
+              features={[
+                "Up to 3 properties",
+                "Tenant management",
+                "Issue/maintenance tracking",
+                "Document storage (1GB)",
+                "Email support"
+              ]}
+              ctaLink="/pricing"
+            />
+            <PricingCard 
+              name="Premium"
               price="£9.99"
               period="per month"
-              description="For landlords & agents"
+              description="For serious investors"
               features={[
-                "Up to 10 properties",
-                "Unlimited photos",
-                "Compliance reminders",
-                "PDF reports",
-                "Contractor tender system",
-                "Document storage (5GB)",
+                "Up to 50 properties",
+                "Advanced reporting",
+                "Contractor marketplace",
+                "Compliance tracking",
                 "Priority support"
               ]}
               highlighted
-            />
-            <PricingCard 
-              name="Business"
-              price="£29.99"
-              period="per month"
-              description="For agencies"
-              features={[
-                "Unlimited properties",
-                "Team members",
-                "API access",
-                "Custom branding",
-                "Document storage (50GB)",
-                "Dedicated support"
-              ]}
+              ctaLink="/pricing"
             />
           </div>
         </div>
@@ -471,14 +470,16 @@ function PricingCard({
   period, 
   description, 
   features, 
-  highlighted = false 
+  highlighted = false,
+  ctaLink = '/signup'
 }: { 
   name: string
   price: string
   period: string
   description: string
   features: string[]
-  highlighted?: boolean 
+  highlighted?: boolean
+  ctaLink?: string
 }) {
   return (
     <div className={`p-8 rounded-2xl border transition-all ${
@@ -504,14 +505,14 @@ function PricingCard({
         ))}
       </ul>
       <Link 
-        href="/signup"
+        href={ctaLink}
         className={`block w-full py-3 rounded-xl font-medium text-center transition-all ${
           highlighted 
             ? 'bg-emerald-600 hover:bg-emerald-500 hover:scale-105' 
             : 'bg-slate-800 hover:bg-slate-700'
         }`}
       >
-        Get Started
+        {ctaLink === '/pricing' ? 'View Plans' : 'Get Started'}
       </Link>
     </div>
   )
