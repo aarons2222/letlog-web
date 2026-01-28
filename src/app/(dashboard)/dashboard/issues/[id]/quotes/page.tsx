@@ -104,7 +104,7 @@ export default function QuotesPage() {
   const router = useRouter()
   const [expandedQuote, setExpandedQuote] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [quotes, setQuotes] = useState(mockQuotes)
+  const [quotes, setQuotes] = useState<any[]>(mockQuotes)
 
   const handleAccept = async (quoteId: string) => {
     setActionLoading(quoteId)
@@ -130,8 +130,8 @@ export default function QuotesPage() {
 
   const sortedQuotes = [...quotes].sort((a, b) => {
     // Accepted first, then pending, then rejected
-    const statusOrder = { accepted: 0, pending: 1, rejected: 2 }
-    return statusOrder[a.status] - statusOrder[b.status]
+    const statusOrder: Record<string, number> = { accepted: 0, pending: 1, rejected: 2 }
+    return (statusOrder[a.status] || 3) - (statusOrder[b.status] || 3)
   })
 
   return (
@@ -192,7 +192,7 @@ export default function QuotesPage() {
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-lg">{quote.contractor.company_name}</h3>
                       {quote.contractor.verified && (
-                        <Shield className="h-4 w-4 text-blue-400" title="Verified" />
+                        <Shield className="h-4 w-4 text-blue-400" />
                       )}
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-sm text-slate-400">
@@ -289,12 +289,12 @@ export default function QuotesPage() {
                   <div>
                     <h4 className="text-sm font-medium text-slate-400 mb-1">Trades</h4>
                     <div className="flex flex-wrap gap-2">
-                      {quote.contractor.trades.map(trade => (
+                      {quote.contractor.trades.map((trade: string) => (
                         <span 
                           key={trade}
                           className="px-2 py-1 bg-slate-700 rounded text-xs"
                         >
-                          {TradeCategoryInfo[trade].displayName}
+                          {TradeCategoryInfo[trade as keyof typeof TradeCategoryInfo]?.displayName || trade}
                         </span>
                       ))}
                     </div>

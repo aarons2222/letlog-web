@@ -47,10 +47,18 @@ body {
 
 /* Card hover effects */
 .card-hover {
-  @apply transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/30;
+  transition: all 200ms ease-in-out;
+}
+
+.card-hover:hover {
+  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
 }
 
 /* Gradient text */
 .gradient-text {
-  @apply bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent;
+  background: linear-gradient(to right, #34d399, #22d3ee);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

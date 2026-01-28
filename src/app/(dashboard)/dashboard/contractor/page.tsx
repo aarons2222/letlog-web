@@ -8,27 +8,34 @@ export default async function ContractorDashboard() {
   // Fetch contractor profile for current user
   const { data: { user } } = await supabase.auth.getUser()
   
-  const { data: contractorProfile } = await supabase
-    .from('contractor_profiles')
-    .select('*')
-    .eq('user_id', user?.id)
-    .single()
+  let contractorProfile: any = null
+  if (user?.id) {
+    const res = await supabase
+      .from('contractor_profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+    contractorProfile = res.data
+  }
 
   // Fetch stats
+  const contractorId = contractorProfile?.id || ''
   const [quotesRes, acceptedQuotesRes] = await Promise.all([
     supabase
       .from('quotes')
       .select('id, status, amount', { count: 'exact' })
-      .eq('contractor_id', contractorProfile?.id),
+      .eq('contractor_id', contractorId),
     supabase
       .from('quotes')
       .select('amount')
-      .eq('contractor_id', contractorProfile?.id)
+      .eq('contractor_id', contractorId)
       .eq('status', 'accepted')
   ])
 
-  const activeQuotes = (quotesRes.data || []).filter(q => q.status === 'pending').length
-  const totalEarnings = (acceptedQuotesRes.data || []).reduce((sum, q) => sum + (q.amount || 0), 0)
+  const quotesData = quotesRes.data as { id: string; status: string; amount: number }[] | null
+  const acceptedData = acceptedQuotesRes.data as { amount: number }[] | null
+  const activeQuotes = (quotesData || []).filter(q => q.status === 'pending').length
+  const totalEarnings = (acceptedData || []).reduce((sum, q) => sum + (q.amount || 0), 0)
 
   const stats = {
     activeQuotes,
