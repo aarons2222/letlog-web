@@ -97,36 +97,7 @@ export default function PricingPage() {
             </div>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Free Tier */}
-            <div className="p-8 rounded-2xl border bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-all">
-              <h3 className="text-2xl font-bold">Free</h3>
-              <p className="text-slate-400 text-sm mb-4">Perfect for tenants</p>
-              <div className="mb-6">
-                <span className="text-5xl font-bold">£0</span>
-                <span className="text-slate-400">/forever</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                {[
-                  '1 property',
-                  'Photo inventories',
-                  'Issue reporting',
-                  'Document storage (100MB)',
-                ].map((feature, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm">
-                    <Check className="h-5 w-5 text-emerald-500 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link 
-                href="/signup"
-                className="block w-full py-3 rounded-xl font-medium text-center transition-all bg-slate-800 hover:bg-slate-700"
-              >
-                Get Started
-              </Link>
-            </div>
-
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {/* Basic Tier */}
             <div className="p-8 rounded-2xl border bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-all">
               <h3 className="text-2xl font-bold">Basic</h3>

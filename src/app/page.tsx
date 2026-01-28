@@ -279,19 +279,7 @@ export default function Home() {
             <p className="text-slate-400">Start free, upgrade when you need more.</p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <PricingCard 
-              name="Free"
-              price="£0"
-              period="forever"
-              description="Perfect for tenants"
-              features={[
-                "1 property",
-                "Photo inventories",
-                "Issue reporting",
-                "Document storage (100MB)"
-              ]}
-            />
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             <PricingCard 
               name="Basic"
               price="£4.99"
