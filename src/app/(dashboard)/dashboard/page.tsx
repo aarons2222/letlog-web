@@ -1,5 +1,3 @@
-'use client'
-
 import { 
   Building2, 
   Users, 
@@ -11,26 +9,79 @@ import {
   Calendar
 } from 'lucide-react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 
-export default function DashboardPage() {
-  // Mock data - replace with real data from Supabase
+export default async function DashboardPage() {
+  const supabase = await createClient()
+  
+  // Fetch real data from Supabase
+  const [propertiesRes, tenanciesRes, issuesRes, remindersRes] = await Promise.all([
+    supabase.from('properties').select('id', { count: 'exact' }),
+    supabase.from('tenancies').select('id', { count: 'exact' }).eq('status', 'active'),
+    supabase.from('issues').select('id', { count: 'exact' }).in('status', ['open', 'in_progress']),
+    supabase.from('compliance_reminders').select('id', { count: 'exact' })
+      .is('completed_at', null)
+      .lte('due_date', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+  ])
+
+  // Fetch recent issues with property info
+  const { data: recentIssues } = await supabase
+    .from('issues')
+    .select(`
+      id,
+      title,
+      priority,
+      status,
+      properties!inner (
+        address_line1,
+        city
+      )
+    `)
+    .in('status', ['open', 'in_progress'])
+    .order('created_at', { ascending: false })
+    .limit(5)
+
+  // Fetch upcoming reminders with property info
+  const { data: upcomingReminders } = await supabase
+    .from('compliance_reminders')
+    .select(`
+      id,
+      title,
+      reminder_type,
+      due_date,
+      properties!inner (
+        address_line1,
+        city
+      )
+    `)
+    .is('completed_at', null)
+    .gte('due_date', new Date().toISOString().split('T')[0])
+    .order('due_date', { ascending: true })
+    .limit(5)
+
   const stats = {
-    properties: 5,
-    activeTenancies: 4,
-    openIssues: 3,
-    upcomingReminders: 2
+    properties: propertiesRes.count || 0,
+    activeTenancies: tenanciesRes.count || 0,
+    openIssues: issuesRes.count || 0,
+    upcomingReminders: remindersRes.count || 0
   }
 
-  const recentIssues = [
-    { id: 1, title: 'Leaking tap in bathroom', property: '12 Oak Street', priority: 'medium', status: 'open' },
-    { id: 2, title: 'Heating not working', property: '45 Elm Avenue', priority: 'high', status: 'in_progress' },
-    { id: 3, title: 'Broken door lock', property: '12 Oak Street', priority: 'urgent', status: 'open' },
-  ]
+  // Transform data for display
+  const formattedIssues = (recentIssues || []).map((issue: any) => ({
+    id: issue.id,
+    title: issue.title,
+    property: `${issue.properties.address_line1}, ${issue.properties.city}`,
+    priority: issue.priority,
+    status: issue.status
+  }))
 
-  const upcomingReminders = [
-    { id: 1, title: 'Gas Safety Certificate', property: '12 Oak Street', dueDate: '2026-02-15', type: 'gas_safety' },
-    { id: 2, title: 'EICR Due', property: '45 Elm Avenue', dueDate: '2026-03-01', type: 'eicr' },
-  ]
+  const formattedReminders = (upcomingReminders || []).map((reminder: any) => ({
+    id: reminder.id,
+    title: reminder.title,
+    property: `${reminder.properties.address_line1}, ${reminder.properties.city}`,
+    dueDate: reminder.due_date,
+    type: reminder.reminder_type
+  }))
 
   return (
     <div className="space-y-8">
@@ -46,7 +97,6 @@ export default function DashboardPage() {
           title="Properties"
           value={stats.properties}
           icon={<Building2 className="h-5 w-5" />}
-          trend={{ value: 2, positive: true }}
           href="/dashboard/properties"
         />
         <StatCard 
@@ -59,7 +109,6 @@ export default function DashboardPage() {
           title="Open Issues"
           value={stats.openIssues}
           icon={<AlertTriangle className="h-5 w-5" />}
-          trend={{ value: 1, positive: false }}
           href="/dashboard/issues"
           alert={stats.openIssues > 0}
         />
@@ -83,18 +132,26 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="space-y-3">
-            {recentIssues.map((issue) => (
-              <div key={issue.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                <div>
-                  <div className="font-medium text-sm">{issue.title}</div>
-                  <div className="text-slate-400 text-xs">{issue.property}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <PriorityBadge priority={issue.priority} />
-                  <StatusBadge status={issue.status} />
-                </div>
-              </div>
-            ))}
+            {formattedIssues.length === 0 ? (
+              <p className="text-slate-400 text-sm text-center py-4">No open issues</p>
+            ) : (
+              formattedIssues.map((issue) => (
+                <Link 
+                  key={issue.id} 
+                  href={`/dashboard/issues/${issue.id}`}
+                  className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors"
+                >
+                  <div>
+                    <div className="font-medium text-sm">{issue.title}</div>
+                    <div className="text-slate-400 text-xs">{issue.property}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <PriorityBadge priority={issue.priority} />
+                    <StatusBadge status={issue.status} />
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
         </div>
 
@@ -107,18 +164,22 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="space-y-3">
-            {upcomingReminders.map((reminder) => (
-              <div key={reminder.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                <div>
-                  <div className="font-medium text-sm">{reminder.title}</div>
-                  <div className="text-slate-400 text-xs">{reminder.property}</div>
+            {formattedReminders.length === 0 ? (
+              <p className="text-slate-400 text-sm text-center py-4">No upcoming reminders</p>
+            ) : (
+              formattedReminders.map((reminder) => (
+                <div key={reminder.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                  <div>
+                    <div className="font-medium text-sm">{reminder.title}</div>
+                    <div className="text-slate-400 text-xs">{reminder.property}</div>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-slate-400" />
+                    <span className="text-amber-400">{formatDate(reminder.dueDate)}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-slate-400" />
-                  <span className="text-amber-400">{formatDate(reminder.dueDate)}</span>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -141,14 +202,12 @@ function StatCard({
   title, 
   value, 
   icon, 
-  trend, 
   href, 
   alert = false 
 }: { 
   title: string
   value: number
   icon: React.ReactNode
-  trend?: { value: number, positive: boolean }
   href: string
   alert?: boolean
 }) {
@@ -156,12 +215,6 @@ function StatCard({
     <Link href={href} className="bg-slate-900/50 rounded-xl border border-slate-800 p-4 card-hover">
       <div className="flex items-center justify-between mb-2">
         <span className={`${alert ? 'text-amber-500' : 'text-slate-400'}`}>{icon}</span>
-        {trend && (
-          <span className={`flex items-center text-xs ${trend.positive ? 'text-emerald-500' : 'text-red-500'}`}>
-            {trend.positive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-            {trend.value}
-          </span>
-        )}
       </div>
       <div className="text-2xl font-bold">{value}</div>
       <div className="text-slate-400 text-sm">{title}</div>
