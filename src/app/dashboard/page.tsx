@@ -85,6 +85,9 @@ export default function DashboardPage() {
       const supabase = createClient();
       
       try {
+        // Refresh session first to ensure RLS works
+        await supabase.auth.refreshSession();
+        
         // Get current user
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
         

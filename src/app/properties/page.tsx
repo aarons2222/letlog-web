@@ -63,6 +63,9 @@ export default function PropertiesPage() {
       const supabase = createClient();
       
       try {
+        // Refresh session first to ensure RLS works
+        await supabase.auth.refreshSession();
+        
         // Get current user
         const { data: { user } } = await supabase.auth.getUser();
         
