@@ -97,21 +97,45 @@ export default function DashboardPage() {
           return;
         }
 
-        // Get name from auth metadata or email (skip profiles table for now)
-        const userName = authUser.user_metadata?.full_name 
+        // Fetch user profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, email, role')
+          .eq('id', authUser.id)
+          .maybeSingle();
+
+        // Get name from profile, auth metadata, or email
+        const userName = profile?.full_name 
+          || authUser.user_metadata?.full_name 
           || authUser.user_metadata?.name
           || authUser.email?.split('@')[0] 
           || 'User';
         
-        const userRole: Role = 'landlord';
+        // Handle role (might be enum value)
+        let userRole: Role = 'landlord';
+        if (profile?.role) {
+          const roleStr = String(profile.role).toLowerCase();
+          if (roleStr === 'tenant') userRole = 'tenant';
+          else if (roleStr === 'contractor') userRole = 'contractor';
+        }
 
         setUser({
           id: authUser.id,
-          email: authUser.email || '',
+          email: profile?.email || authUser.email || '',
           full_name: userName,
           role: userRole,
         });
         setRole(userRole);
+
+        // Create profile if doesn't exist
+        if (!profile) {
+          await supabase.from('profiles').upsert({
+            id: authUser.id,
+            email: authUser.email,
+            full_name: userName,
+            role: 'landlord',
+          }).select();
+        }
 
         // Fetch stats based on role
         await loadStats(supabase, authUser.id, userRole);
@@ -131,7 +155,6 @@ export default function DashboardPage() {
   }, []);
 
   async function loadStats(supabase: ReturnType<typeof createClient>, userId: string, userRole: Role) {
-    // Default stats
     let newStats = {
       properties: 0,
       tenancies: 0,
@@ -141,22 +164,74 @@ export default function DashboardPage() {
     };
 
     if (userRole === 'landlord') {
-      // Only load properties - skip other tables for now
-      try {
-        const { data: properties, error: propError } = await supabase
-          .from('properties')
-          .select('*');
+      // Get my properties
+      const { data: properties } = await supabase
+        .from('properties')
+        .select('id')
+        .eq('landlord_id', userId);
+      
+      newStats.properties = properties?.length || 0;
+      
+      if (properties && properties.length > 0) {
+        const propIds = properties.map(p => p.id);
         
-        if (propError) {
-          console.error('Properties error:', propError);
-        } else if (properties) {
-          // Filter client-side by landlord_id
-          const myProps = properties.filter(p => p.landlord_id === userId);
-          newStats.properties = myProps.length;
-          console.log('Properties:', { total: properties.length, mine: myProps.length });
-        }
-      } catch (e) {
-        console.error('Stats failed:', e);
+        // Count active tenancies (status is enum, try common values)
+        const { data: tenancies } = await supabase
+          .from('tenancies')
+          .select('id, status')
+          .in('property_id', propIds);
+        
+        // Filter active tenancies client-side (enum might be 'active', 'Active', etc)
+        newStats.tenancies = tenancies?.filter(t => 
+          t.status?.toLowerCase() === 'active' || t.status?.toLowerCase() === 'current'
+        ).length || 0;
+
+        // Count open issues
+        const { data: issues } = await supabase
+          .from('issues')
+          .select('id, status')
+          .in('property_id', propIds);
+        
+        // Filter open issues client-side
+        newStats.openIssues = issues?.filter(i => 
+          ['open', 'pending', 'in_progress', 'reported'].includes(i.status?.toLowerCase() || '')
+        ).length || 0;
+      }
+
+      // Count pending quotes for my tenders
+      const { data: tenders } = await supabase
+        .from('tenders')
+        .select('id')
+        .eq('landlord_id', userId);
+      
+      if (tenders && tenders.length > 0) {
+        const tenderIds = tenders.map(t => t.id);
+        const { data: quotes } = await supabase
+          .from('quotes')
+          .select('id, status')
+          .in('tender_id', tenderIds);
+        
+        newStats.pendingQuotes = quotes?.filter(q => 
+          q.status?.toLowerCase() === 'pending'
+        ).length || 0;
+      }
+
+      // Count compliance alerts (expiring within 30 days)
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      
+      const { data: compliance } = await supabase
+        .from('compliance_items')
+        .select('id, expiry_date, status, property_id')
+        .lt('expiry_date', thirtyDaysFromNow.toISOString());
+      
+      // Filter to my properties and valid status
+      if (properties && compliance) {
+        const propIds = properties.map(p => p.id);
+        newStats.complianceAlerts = compliance.filter(c => 
+          propIds.includes(c.property_id) && 
+          c.status?.toLowerCase() === 'valid'
+        ).length;
       }
     }
 
@@ -164,8 +239,62 @@ export default function DashboardPage() {
   }
 
   async function loadActivity(supabase: ReturnType<typeof createClient>, userId: string) {
-    // Skip activity queries for now - tables may not exist or have wrong columns
-    setActivities([]);
+    const activityItems: Activity[] = [];
+
+    try {
+      // Get my properties first
+      const { data: properties } = await supabase
+        .from('properties')
+        .select('id')
+        .eq('landlord_id', userId);
+      
+      if (properties && properties.length > 0) {
+        const propIds = properties.map(p => p.id);
+
+        // Recent issues
+        const { data: issues } = await supabase
+          .from('issues')
+          .select('id, title, status, created_at')
+          .in('property_id', propIds)
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        issues?.forEach((issue) => {
+          activityItems.push({
+            id: `issue-${issue.id}`,
+            type: 'issue',
+            text: `Issue: ${issue.title || 'Untitled'}`,
+            time: formatTimeAgo(issue.created_at),
+            icon: issue.status?.toLowerCase() === 'open' ? '🔧' : '✅',
+          });
+        });
+
+        // Recent tenancies
+        const { data: tenancies } = await supabase
+          .from('tenancies')
+          .select('id, status, start_date, created_at')
+          .in('property_id', propIds)
+          .order('created_at', { ascending: false })
+          .limit(2);
+
+        tenancies?.forEach((tenancy) => {
+          activityItems.push({
+            id: `tenancy-${tenancy.id}`,
+            type: 'tenancy',
+            text: `Tenancy ${tenancy.status?.toLowerCase() === 'active' ? 'started' : 'updated'}`,
+            time: formatTimeAgo(tenancy.created_at),
+            icon: '🏠',
+          });
+        });
+      }
+
+      // Sort by time
+      activityItems.sort((a, b) => b.time.localeCompare(a.time));
+      setActivities(activityItems.slice(0, 5));
+    } catch (err) {
+      console.error('Activity load error:', err);
+      setActivities([]);
+    }
   }
 
   const roleConfig = {

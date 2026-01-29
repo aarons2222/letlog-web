@@ -89,43 +89,42 @@ export default function PropertiesPage() {
         // Enrich properties with tenancy and compliance data
         const enrichedProperties = await Promise.all(
           propertiesData.map(async (prop) => {
-            // Get active tenancy
+            // Get tenancies for this property (no tenant_id in schema, just status)
             const { data: tenancies } = await supabase
               .from('tenancies')
-              .select('*, profiles(full_name)')
-              .eq('property_id', prop.id)
-              .eq('status', 'active');
+              .select('id, status, rent_amount')
+              .eq('property_id', prop.id);
+            
+            // Filter active tenancies client-side (status is enum)
+            const activeTenancies = tenancies?.filter(t => 
+              t.status?.toLowerCase() === 'active' || t.status?.toLowerCase() === 'current'
+            ) || [];
 
             // Get compliance status
             const thirtyDaysFromNow = new Date();
             thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+            const now = new Date();
             
-            const { data: expiringCompliance } = await supabase
+            const { data: compliance } = await supabase
               .from('compliance_items')
-              .select('id')
-              .eq('property_id', prop.id)
-              .lt('expiry_date', thirtyDaysFromNow.toISOString())
-              .eq('status', 'valid')
-              .limit(1);
-
-            const { data: expiredCompliance } = await supabase
-              .from('compliance_items')
-              .select('id')
-              .eq('property_id', prop.id)
-              .lt('expiry_date', new Date().toISOString())
-              .eq('status', 'valid')
-              .limit(1);
+              .select('id, expiry_date, status')
+              .eq('property_id', prop.id);
 
             let complianceStatus: 'valid' | 'expiring' | 'expired' = 'valid';
-            if (expiredCompliance?.length) complianceStatus = 'expired';
-            else if (expiringCompliance?.length) complianceStatus = 'expiring';
+            if (compliance) {
+              const validItems = compliance.filter(c => c.status?.toLowerCase() === 'valid');
+              const expired = validItems.some(c => new Date(c.expiry_date) < now);
+              const expiring = validItems.some(c => new Date(c.expiry_date) < thirtyDaysFromNow);
+              if (expired) complianceStatus = 'expired';
+              else if (expiring) complianceStatus = 'expiring';
+            }
 
             return {
               ...prop,
-              status: tenancies?.length ? 'occupied' : 'vacant',
-              tenant_count: tenancies?.length || 0,
+              status: activeTenancies.length > 0 ? 'occupied' : 'vacant',
+              tenant_count: activeTenancies.length,
               compliance_status: complianceStatus,
-              rent_amount: tenancies?.[0]?.rent_amount || 0,
+              rent_amount: activeTenancies[0]?.rent_amount || 0,
             } as Property;
           })
         );
