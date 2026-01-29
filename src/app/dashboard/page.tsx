@@ -95,24 +95,42 @@ export default function DashboardPage() {
         }
 
         // Fetch user profile
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('id, email, full_name, role')
           .eq('id', authUser.id)
           .single();
 
-        if (profile) {
-          setUser({
-            id: profile.id,
-            email: profile.email || authUser.email || '',
-            full_name: profile.full_name || 'User',
-            role: (profile.role as Role) || 'landlord',
+        // Get name from profile, auth metadata, or email
+        const userName = profile?.full_name 
+          || authUser.user_metadata?.full_name 
+          || authUser.user_metadata?.name
+          || authUser.email?.split('@')[0] 
+          || 'User';
+        
+        const userRole = (profile?.role as Role) || 'landlord';
+
+        setUser({
+          id: authUser.id,
+          email: profile?.email || authUser.email || '',
+          full_name: userName,
+          role: userRole,
+        });
+        setRole(userRole);
+
+        // If no profile exists, create one
+        if (profileError || !profile) {
+          console.log('No profile found, creating one...');
+          await supabase.from('profiles').upsert({
+            id: authUser.id,
+            email: authUser.email,
+            full_name: userName,
+            role: 'landlord',
           });
-          setRole((profile.role as Role) || 'landlord');
         }
 
         // Fetch stats based on role
-        await loadStats(supabase, authUser.id, (profile?.role as Role) || 'landlord');
+        await loadStats(supabase, authUser.id, userRole);
         
         // Fetch recent activity
         await loadActivity(supabase, authUser.id);
@@ -129,53 +147,72 @@ export default function DashboardPage() {
   }, []);
 
   async function loadStats(supabase: ReturnType<typeof createClient>, userId: string, userRole: Role) {
+    // Default stats - will show empty state for new users
+    let newStats = {
+      properties: 0,
+      tenancies: 0,
+      openIssues: 0,
+      pendingQuotes: 0,
+      complianceAlerts: 0,
+    };
+
     try {
       if (userRole === 'landlord') {
-        // Count properties
-        const { count: propCount } = await supabase
-          .from('properties')
-          .select('*', { count: 'exact', head: true })
-          .eq('landlord_id', userId);
+        // Count properties (handle table not existing)
+        try {
+          const { count: propCount } = await supabase
+            .from('properties')
+            .select('*', { count: 'exact', head: true })
+            .eq('landlord_id', userId);
+          newStats.properties = propCount || 0;
+        } catch (e) { /* table may not exist */ }
 
         // Count active tenancies
-        const { count: tenancyCount } = await supabase
-          .from('tenancies')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'active');
+        try {
+          const { count: tenancyCount } = await supabase
+            .from('tenancies')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'active');
+          newStats.tenancies = tenancyCount || 0;
+        } catch (e) { /* table may not exist */ }
 
         // Count open issues
-        const { count: issueCount } = await supabase
-          .from('issues')
-          .select('*', { count: 'exact', head: true })
-          .in('status', ['open', 'in_progress']);
+        try {
+          const { count: issueCount } = await supabase
+            .from('issues')
+            .select('*', { count: 'exact', head: true })
+            .in('status', ['open', 'in_progress']);
+          newStats.openIssues = issueCount || 0;
+        } catch (e) { /* table may not exist */ }
 
         // Count pending quotes
-        const { count: quoteCount } = await supabase
-          .from('quotes')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending');
+        try {
+          const { count: quoteCount } = await supabase
+            .from('quotes')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending');
+          newStats.pendingQuotes = quoteCount || 0;
+        } catch (e) { /* table may not exist */ }
 
-        // Count compliance alerts (items due soon)
-        const thirtyDaysFromNow = new Date();
-        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-        
-        const { count: complianceCount } = await supabase
-          .from('compliance_items')
-          .select('*', { count: 'exact', head: true })
-          .lt('expiry_date', thirtyDaysFromNow.toISOString())
-          .eq('status', 'valid');
-
-        setStats({
-          properties: propCount || 0,
-          tenancies: tenancyCount || 0,
-          openIssues: issueCount || 0,
-          pendingQuotes: quoteCount || 0,
-          complianceAlerts: complianceCount || 0,
-        });
+        // Count compliance alerts
+        try {
+          const thirtyDaysFromNow = new Date();
+          thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+          
+          const { count: complianceCount } = await supabase
+            .from('compliance_items')
+            .select('*', { count: 'exact', head: true })
+            .lt('expiry_date', thirtyDaysFromNow.toISOString())
+            .eq('status', 'valid');
+          newStats.complianceAlerts = complianceCount || 0;
+        } catch (e) { /* table may not exist */ }
       }
     } catch (err) {
       console.error('Stats load error:', err);
     }
+
+    // Always set stats, even if all queries failed
+    setStats(newStats);
   }
 
   async function loadActivity(supabase: ReturnType<typeof createClient>, userId: string) {
@@ -294,12 +331,12 @@ export default function DashboardPage() {
                 animate="visible"
                 variants={containerVariants}
               >
-                {/* Show empty state for new users */}
-                {role === 'landlord' && stats.properties === 0 ? (
+                {/* Show empty state for new users (check for 0, null, or undefined) */}
+                {(role === 'landlord' && !stats.properties) ? (
                   <DashboardEmptyState role={role} />
-                ) : role === 'contractor' && stats.pendingQuotes === 0 ? (
+                ) : (role === 'contractor' && !stats.pendingQuotes) ? (
                   <DashboardEmptyState role={role} />
-                ) : role === 'tenant' && stats.openIssues === 0 && activities.length === 0 ? (
+                ) : (role === 'tenant' && !stats.openIssues && activities.length === 0) ? (
                   <DashboardEmptyState role={role} />
                 ) : (
                   <>
