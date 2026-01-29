@@ -1,85 +1,84 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe, PRICE_IDS } from '@/lib/stripe';
+import { getStripeServer, getPlanById } from '@/lib/stripe/config';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { priceId, plan, billing } = await req.json();
+    const { priceId, planId } = await req.json();
     
-    // Get current user
+    // Get the current user
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (!user) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    // Determine the correct price ID
-    let selectedPriceId = priceId;
-    if (!selectedPriceId && plan && billing) {
-      if (plan === 'basic') {
-        selectedPriceId = billing === 'yearly' ? PRICE_IDS.BASIC_YEARLY : PRICE_IDS.BASIC_MONTHLY;
-      } else if (plan === 'premium') {
-        selectedPriceId = billing === 'yearly' ? PRICE_IDS.PREMIUM_YEARLY : PRICE_IDS.PREMIUM_MONTHLY;
-      }
+    
+    // Get plan details
+    const plan = getPlanById(planId);
+    if (!plan || !plan.priceId) {
+      return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
-
-    if (!selectedPriceId) {
-      return NextResponse.json({ error: 'Invalid plan or price' }, { status: 400 });
-    }
-
-    // Get or create Stripe customer
+    
+    // Check if user already has a Stripe customer ID
     const { data: profile } = await supabase
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', user.id)
       .single();
-
-    let customerId = (profile as { stripe_customer_id?: string } | null)?.stripe_customer_id;
-
+    
+    let customerId = profile?.stripe_customer_id;
+    
+    const stripe = getStripeServer();
+    
+    // Create a new customer if needed
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email,
         metadata: {
-          supabaseUserId: user.id,
+          supabase_user_id: user.id,
         },
       });
       customerId = customer.id;
-
-      // Save customer ID - using any to bypass strict typing
+      
+      // Save customer ID to profile
       await supabase
         .from('profiles')
-        .update({ stripe_customer_id: customerId } as Record<string, unknown>)
+        .update({ stripe_customer_id: customerId })
         .eq('id', user.id);
     }
-
+    
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      mode: 'subscription',
-      payment_method_types: ['card'],
       line_items: [
         {
-          price: selectedPriceId,
+          price: priceId,
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin}/dashboard?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin}/pricing?canceled=true`,
+      mode: 'subscription',
+      success_url: `${req.nextUrl.origin}/dashboard?checkout=success`,
+      cancel_url: `${req.nextUrl.origin}/pricing?checkout=cancelled`,
       subscription_data: {
         trial_period_days: 14,
         metadata: {
-          userId: user.id,
+          supabase_user_id: user.id,
+          plan_id: planId,
         },
       },
       metadata: {
-        userId: user.id,
+        supabase_user_id: user.id,
+        plan_id: planId,
       },
     });
-
+    
     return NextResponse.json({ url: session.url });
-  } catch (error) {
-    console.error('Checkout error:', error);
-    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Stripe checkout error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to create checkout session' },
+      { status: 500 }
+    );
   }
 }

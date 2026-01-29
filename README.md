@@ -1,133 +1,36 @@
-# LetLog Web Dashboard
-
-Property management web application built with Next.js 14 and Supabase.
-
-## Features
-
-- 🏠 **Property Management** - Track unlimited properties with details, photos, and documents
-- 📸 **Photo Inventories** - Before/after photos with timestamps and geolocation
-- 👥 **Tenancy Tracking** - Manage tenants, rent, deposits, and agreements
-- 🔧 **Issue Management** - Log, assign, and track maintenance issues
-- ⏰ **Compliance Reminders** - Gas safety, EICR, EPC, and custom reminders
-- 📄 **Document Storage** - Securely store certificates and agreements
-
-## Tech Stack
-
-- **Framework**: Next.js 14 (App Router)
-- **Database**: Supabase (PostgreSQL)
-- **Auth**: Supabase Auth
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **Deployment**: Vercel
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
-### Prerequisites
+First, run the development server:
 
-- Node.js 18+
-- Supabase project
-
-### Installation
-
-1. Clone the repository:
-\`\`\`bash
-git clone https://github.com/aarons2222/letlog-web.git
-cd letlog-web
-\`\`\`
-
-2. Install dependencies:
-\`\`\`bash
-npm install
-\`\`\`
-
-3. Set up environment variables:
-\`\`\`bash
-cp .env.example .env.local
-\`\`\`
-
-Edit \`.env.local\` with your Supabase credentials.
-
-4. Set up the database:
-   - Go to your Supabase dashboard
-   - Open SQL Editor
-   - Run the SQL from \`supabase/schema.sql\`
-
-5. Create a storage bucket:
-   - Go to Storage in Supabase dashboard
-   - Create a new bucket called \`letlog-files\`
-   - Set it to private
-
-6. Run the development server:
-\`\`\`bash
+```bash
 npm run dev
-\`\`\`
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## API Routes
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-### Properties
-- \`GET /api/properties\` - List all properties
-- \`POST /api/properties\` - Create a property
-- \`GET /api/properties/[id]\` - Get property details
-- \`PUT /api/properties/[id]\` - Update a property
-- \`DELETE /api/properties/[id]\` - Delete a property
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-### Nested Resources
-- \`GET/POST /api/properties/[id]/rooms\` - Property rooms
-- \`GET/POST /api/properties/[id]/issues\` - Property issues
-- \`GET/POST /api/properties/[id]/tenancies\` - Property tenancies
+## Learn More
 
-## Project Structure
+To learn more about Next.js, take a look at the following resources:
 
-\`\`\`
-letlog-web/
-├── src/
-│   ├── app/
-│   │   ├── (dashboard)/     # Authenticated dashboard routes
-│   │   │   └── dashboard/
-│   │   │       ├── page.tsx
-│   │   │       └── properties/
-│   │   ├── api/             # API routes
-│   │   ├── page.tsx         # Landing page
-│   │   └── layout.tsx
-│   └── lib/
-│       └── supabase/        # Supabase client & types
-├── supabase/
-│   └── schema.sql           # Database schema
-└── public/
-\`\`\`
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## Database Schema
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-See \`supabase/schema.sql\` for the complete database schema including:
-- Profiles (users)
-- Properties
-- Rooms
-- Tenancies
-- Photos
-- Issues
-- Documents
-- Compliance Reminders
-- Messages
+## Deploy on Vercel
 
-All tables have Row Level Security (RLS) enabled.
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-## Deployment
-
-Deploy to Vercel:
-
-\`\`\`bash
-npm run build
-vercel
-\`\`\`
-
-## Related Projects
-
-- [LetLog iOS](../LetLog) - iOS app
-- [LetLog Android](../LetLog-Android) - Android app
-- [LetLog Landing](../LetLog/landing) - Marketing landing page
-
-## License
-
-MIT
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

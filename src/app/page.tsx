@@ -1,521 +1,297 @@
-'use client'
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Key, Wrench, FileCheck, Shield, Bell, Smartphone, ArrowRight, Star, Home } from "lucide-react";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { 
-  Building2, 
-  Users, 
-  AlertTriangle, 
-  FileText, 
-  Bell, 
-  Camera,
-  ArrowRight,
-  Check,
-  Shield,
-  Smartphone,
-  Star,
-  ChevronDown,
-  Wrench,
-  Calendar,
-  PoundSterling,
-  Lock
-} from 'lucide-react'
-
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-lg border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-8 w-8 text-emerald-500" />
-              <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">LetLog</span>
-            </div>
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-slate-300 hover:text-white transition-colors">Features</a>
-              <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">Pricing</Link>
-              <a href="#testimonials" className="text-slate-300 hover:text-white transition-colors">Testimonials</a>
-              <a href="#faq" className="text-slate-300 hover:text-white transition-colors">FAQ</a>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link 
-                href="/login"
-                className="text-slate-300 hover:text-white transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link 
-                href="/signup"
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg font-medium transition-all hover:scale-105"
-              >
-                Get Started
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/20 via-transparent to-cyan-900/20" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-3xl" />
-        
-        <div className="max-w-7xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm mb-8">
-            <Star className="h-4 w-4" />
-            <span>Trusted by 2,000+ UK landlords</span>
-          </div>
-          
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-            Property Management
-            <br />
-            <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Made Simple</span>
-          </h1>
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10">
-            The all-in-one platform for landlords, letting agents, and tenants. 
-            Track properties, manage tenancies, and stay compliant — all from one dashboard.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Link 
-              href="/signup"
-              className="group px-8 py-4 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
-            >
-              Start Free Trial
-              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-3">
+            <Image src="/logo.svg" alt="LetLog" width={40} height={40} className="rounded-xl shadow-lg" />
+            <span className="font-semibold text-xl tracking-tight">
+              <span className="bg-gradient-to-r from-[#E8998D] to-[#F4A261] bg-clip-text text-transparent">Let</span>
+              <span>Log</span>
+            </span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-8">
+            <Link href="#features" className="text-slate-600 hover:text-slate-900 transition-colors">Features</Link>
+            <Link href="#pricing" className="text-slate-600 hover:text-slate-900 transition-colors">Pricing</Link>
+            <Link href="/blog" className="text-slate-600 hover:text-slate-900 transition-colors">Blog</Link>
+          </nav>
+          <div className="flex items-center gap-3">
+            <Link href="/login">
+              <Button variant="ghost" className="rounded-full px-5">Sign In</Button>
             </Link>
-            <Link 
-              href="/demo"
-              className="px-8 py-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-semibold text-lg transition-all border border-slate-700 hover:border-slate-600"
-            >
-              View Demo
+            <Link href="/signup">
+              <Button className="rounded-full px-5 bg-slate-900 hover:bg-slate-800">Get Started</Button>
             </Link>
           </div>
-          
-          {/* App Preview */}
-          <div className="relative max-w-5xl mx-auto">
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10 pointer-events-none" />
-            <div className="bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl shadow-emerald-500/10 overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 bg-slate-800/50 border-b border-slate-700">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="ml-4 text-sm text-slate-400">LetLog Dashboard</span>
-              </div>
-              <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-800">
-                <div className="grid grid-cols-4 gap-4 mb-6">
-                  <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                    <Building2 className="h-6 w-6 text-emerald-500 mb-2" />
-                    <div className="text-2xl font-bold">12</div>
-                    <div className="text-sm text-slate-400">Properties</div>
-                  </div>
-                  <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                    <Users className="h-6 w-6 text-cyan-500 mb-2" />
-                    <div className="text-2xl font-bold">8</div>
-                    <div className="text-sm text-slate-400">Tenants</div>
-                  </div>
-                  <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                    <AlertTriangle className="h-6 w-6 text-amber-500 mb-2" />
-                    <div className="text-2xl font-bold">3</div>
-                    <div className="text-sm text-slate-400">Open Issues</div>
-                  </div>
-                  <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                    <Bell className="h-6 w-6 text-purple-500 mb-2" />
-                    <div className="text-2xl font-bold">2</div>
-                    <div className="text-sm text-slate-400">Reminders</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 h-32" />
-                  <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 h-32" />
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
-      </section>
+      </header>
 
-      {/* Stats Section */}
-      <section className="py-16 px-4 border-y border-slate-800 bg-slate-900/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold text-emerald-400 mb-2">2,000+</div>
-              <div className="text-slate-400">Active Landlords</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-emerald-400 mb-2">15,000+</div>
-              <div className="text-slate-400">Properties Managed</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-emerald-400 mb-2">99.9%</div>
-              <div className="text-slate-400">Uptime</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-emerald-400 mb-2">4.9★</div>
-              <div className="text-slate-400">App Store Rating</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section id="features" className="py-24 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Everything You Need</h2>
-            <p className="text-slate-400 max-w-2xl mx-auto">
-              From property inventories to compliance tracking, LetLog has you covered.
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FDF8F6] via-white to-slate-50" />
+        <div className="relative container mx-auto px-6 pt-20 pb-32">
+          <div className="max-w-3xl mx-auto text-center">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-slate-900 leading-[1.1]">
+              Stop juggling spreadsheets.{" "}
+              <span className="bg-gradient-to-r from-[#E8998D] to-[#F4A261] bg-clip-text text-transparent">
+                Start managing.
+              </span>
+            </h1>
+            <p className="mt-8 text-xl text-slate-600 leading-relaxed max-w-2xl mx-auto">
+              Gas safety expiring? Rent due? Leak reported at 11pm? LetLog keeps everything in one place — 
+              so you never miss a deadline, lose a document, or chase a contractor again.
             </p>
+            <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/signup">
+                <Button size="lg" className="rounded-full px-8 py-6 text-lg bg-slate-900 hover:bg-slate-800 shadow-xl shadow-slate-900/10 hover:shadow-2xl hover:shadow-slate-900/20 transition-all">
+                  Start Free Trial
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+              <Link href="#demo">
+                <Button variant="ghost" size="lg" className="rounded-full px-8 py-6 text-lg text-slate-600 hover:text-slate-900">
+                  Watch Demo
+                </Button>
+              </Link>
+            </div>
           </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <FeatureCard 
-              icon={<Building2 className="h-6 w-6" />}
-              title="Property Portfolio"
-              description="Manage unlimited properties with detailed information, photos, and documents all in one place."
-            />
-            <FeatureCard 
-              icon={<Camera className="h-6 w-6" />}
-              title="Photo Inventories"
-              description="Take timestamped, geotagged photos for move-in/move-out inventories. Generate PDF reports instantly."
-            />
-            <FeatureCard 
-              icon={<Users className="h-6 w-6" />}
-              title="Tenancy Management"
-              description="Track tenancies, rent payments, deposit schemes, and tenant communications."
-            />
-            <FeatureCard 
-              icon={<Wrench className="h-6 w-6" />}
-              title="Issue Tracking & Tenders"
-              description="Log maintenance issues, send to contractors for quotes, and track resolution status."
-            />
-            <FeatureCard 
-              icon={<Bell className="h-6 w-6" />}
-              title="Compliance Reminders"
-              description="Never miss a gas safety check, EICR, or EPC renewal with automatic reminders."
-            />
-            <FeatureCard 
-              icon={<FileText className="h-6 w-6" />}
-              title="Document Storage"
-              description="Securely store tenancy agreements, certificates, and receipts linked to each property."
-            />
-          </div>
-        </div>
-      </section>
 
-      {/* How It Works */}
-      <section className="py-24 px-4 bg-slate-900/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">How It Works</h2>
-            <p className="text-slate-400">Get started in minutes, not hours.</p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
-                <span className="text-2xl font-bold text-emerald-400">1</span>
+          {/* Dashboard Preview */}
+          <div className="mt-20 max-w-5xl mx-auto">
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-[#E8998D]/20 via-[#F4A261]/20 to-amber-300/20 rounded-[28px] blur-2xl" />
+              <div className="relative bg-slate-900 rounded-2xl shadow-2xl overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 bg-slate-800/50 border-b border-slate-700/50">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                  </div>
+                  <span className="text-slate-400 text-sm ml-2">LetLog Dashboard</span>
+                </div>
+                <div className="p-6 md:p-8">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    {[
+                      { label: "Properties", value: "12", icon: Home, color: "terracotta" },
+                      { label: "Tenants", value: "8", icon: Key, color: "emerald" },
+                      { label: "Open Issues", value: "3", icon: Bell, color: "amber" },
+                      { label: "Reminders", value: "2", icon: Shield, color: "blue" },
+                    ].map((stat, i) => (
+                      <div key={i} className="bg-slate-800/50 rounded-xl p-4 md:p-5">
+                        <stat.icon className={`w-5 h-5 mb-3 ${
+                          stat.color === 'terracotta' ? 'text-[#E8998D]' :
+                          stat.color === 'emerald' ? 'text-emerald-400' :
+                          stat.color === 'amber' ? 'text-amber-400' : 'text-blue-400'
+                        }`} />
+                        <div className="text-2xl md:text-3xl font-bold text-white">{stat.value}</div>
+                        <div className="text-slate-400 text-sm mt-1">{stat.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Add Your Properties</h3>
-              <p className="text-slate-400">Enter property details, upload photos, and set up rooms in just a few clicks.</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
-                <span className="text-2xl font-bold text-emerald-400">2</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Invite Tenants</h3>
-              <p className="text-slate-400">Send invite links to tenants so they can report issues and access documents.</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
-                <span className="text-2xl font-bold text-emerald-400">3</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Stay Organised</h3>
-              <p className="text-slate-400">Get reminders, track issues, and generate reports — all automatically.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section id="testimonials" className="py-24 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Loved by Landlords</h2>
-            <p className="text-slate-400">See what our users have to say.</p>
+      {/* User Types */}
+      <section className="py-32">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-20">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Everyone wins with LetLog</h2>
+            <p className="text-slate-600 mt-4 text-lg">Landlords save time. Tenants get heard. Contractors get paid.</p>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <TestimonialCard 
-              quote="LetLog has completely transformed how I manage my properties. The compliance reminders alone have saved me from missing deadlines."
-              author="Sarah M."
-              role="Landlord, 8 properties"
-              rating={5}
-            />
-            <TestimonialCard 
-              quote="As a letting agent, I needed something that worked for multiple landlords. LetLog's team features are exactly what I was looking for."
-              author="James T."
-              role="Letting Agent"
-              rating={5}
-            />
-            <TestimonialCard 
-              quote="The tenant portal is brilliant. My tenants can report issues with photos and I can track everything in one place."
-              author="Michelle R."
-              role="Landlord, 3 properties"
-              rating={5}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section id="pricing" className="py-24 px-4 bg-slate-900/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-slate-400">Start free, upgrade when you need more.</p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            <PricingCard 
-              name="Basic"
-              price="£4.99"
-              period="per month"
-              description="For small landlords"
-              features={[
-                "Up to 3 properties",
-                "Tenant management",
-                "Issue/maintenance tracking",
-                "Document storage (1GB)",
-                "Email support"
-              ]}
-              ctaLink="/pricing"
-            />
-            <PricingCard 
-              name="Premium"
-              price="£9.99"
-              period="per month"
-              description="For serious investors"
-              features={[
-                "Up to 50 properties",
-                "Advanced reporting",
-                "Contractor marketplace",
-                "Compliance tracking",
-                "Priority support"
-              ]}
-              highlighted
-              ctaLink="/pricing"
-            />
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+            {[
+              {
+                icon: Home,
+                title: "Landlords",
+                desc: "Finally, everything in one place",
+                color: "terracotta",
+                features: ["Track every property, tenant & lease", "Never miss a compliance deadline", "Share documents securely", "Get competitive repair quotes"],
+              },
+              {
+                icon: Key,
+                title: "Tenants", 
+                desc: "No more ignored emails",
+                color: "emerald",
+                features: ["Report issues with photos in seconds", "Track when repairs are happening", "Access your tenancy documents 24/7", "See exactly what's being done"],
+              },
+              {
+                icon: Wrench,
+                title: "Contractors",
+                desc: "More jobs, less hassle",
+                color: "amber",
+                features: ["Get notified of local jobs instantly", "Submit quotes in one click", "Build your reputation with reviews", "Get paid faster"],
+              },
+            ].map((card, i) => (
+              <div
+                key={i}
+                className="group relative bg-white rounded-[24px] p-8 shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)] transition-all duration-300 hover:-translate-y-1"
+              >
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${
+                  card.color === 'terracotta' ? 'bg-[#F5E6E3]' :
+                  card.color === 'emerald' ? 'bg-emerald-100' : 'bg-amber-100'
+                }`}>
+                  <card.icon className={`w-7 h-7 ${
+                    card.color === 'terracotta' ? 'text-[#C17B6E]' :
+                    card.color === 'emerald' ? 'text-emerald-600' : 'text-amber-600'
+                  }`} />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900">{card.title}</h3>
+                <p className="text-slate-500 mt-2">{card.desc}</p>
+                <ul className="mt-6 space-y-3">
+                  {card.features.map((feature, j) => (
+                    <li key={j} className="flex items-center gap-3 text-slate-600">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                        card.color === 'terracotta' ? 'bg-[#F5E6E3] text-[#C17B6E]' :
+                        card.color === 'emerald' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+                      }`}>
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-24 px-4">
-        <div className="max-w-3xl mx-auto">
+      {/* Pain Points */}
+      <section className="py-32 bg-slate-900 text-white">
+        <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Frequently Asked Questions</h2>
-            <p className="text-slate-400">Got questions? We've got answers.</p>
+            <h2 className="text-3xl md:text-4xl font-bold">Sound familiar?</h2>
           </div>
-          
-          <div className="space-y-4">
-            <FAQItem 
-              question="Is my data secure?"
-              answer="Absolutely. We use bank-level encryption (AES-256) and all data is stored on UK-based servers. We're fully GDPR compliant and never share your data with third parties."
-            />
-            <FAQItem 
-              question="Can tenants use LetLog too?"
-              answer="Yes! Tenants can download the app for free and use it to report issues, view documents, and communicate with their landlord. They just need an invite link from you."
-            />
-            <FAQItem 
-              question="Do you have mobile apps?"
-              answer="Yes, we have native iOS and Android apps available on the App Store and Google Play. They sync seamlessly with the web dashboard."
-            />
-            <FAQItem 
-              question="Can I cancel anytime?"
-              answer="Yes, you can cancel your subscription at any time. Your data remains accessible for 30 days after cancellation, giving you time to export everything."
-            />
-            <FAQItem 
-              question="Do you integrate with other tools?"
-              answer="We integrate with popular accounting software and are constantly adding new integrations. Contact us if you need a specific integration."
-            />
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
+            {[
+              "Scrolling through WhatsApp to find that gas certificate",
+              "Chasing tenants for rent with awkward texts", 
+              "Scrambling to book a gas check before it expires",
+              "Calling three contractors for one leaky tap",
+            ].map((pain, i) => (
+              <div key={i} className="text-center">
+                <div className="text-4xl mb-4">😩</div>
+                <p className="text-slate-300 text-sm leading-relaxed">{pain}</p>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-16">
+            <p className="text-2xl md:text-3xl font-semibold">There's a better way.</p>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 px-4 bg-gradient-to-r from-emerald-900/30 to-cyan-900/30 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="text-4xl font-bold mb-4">Ready to simplify your property management?</h2>
-          <p className="text-slate-400 mb-8 text-lg">
-            Join thousands of landlords and agents who trust LetLog.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link 
-              href="/signup"
-              className="group px-8 py-4 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-lg transition-all hover:scale-105 flex items-center gap-2"
-            >
-              Start Your Free Trial
-              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <div className="flex items-center gap-2 text-slate-400">
-              <Shield className="h-5 w-5" />
-              <span>No credit card required</span>
+      {/* Features */}
+      <section id="features" className="py-32 bg-[#FDFBF9]">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-20">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Everything in one place</h2>
+            <p className="text-slate-600 mt-4 text-lg">No more spreadsheets. No more WhatsApp chaos. Just clarity.</p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { icon: FileCheck, title: "Tenancy Management", desc: "Every lease, deposit, and tenant detail — organised and searchable. Know exactly what's happening across your portfolio." },
+              { icon: Shield, title: "Document Vault", desc: "Upload once, share forever. Tenancy agreements, certificates, inventories — always accessible, always secure." },
+              { icon: Bell, title: "Smart Issue Reporting", desc: "Tenants report problems with photos. You see them instantly. No more 'I texted you last week about the boiler.'" },
+              { icon: Wrench, title: "Contractor Marketplace", desc: "Post a job, get quotes from verified local tradespeople, pick the best one. Simple." },
+              { icon: FileCheck, title: "Compliance Autopilot", desc: "Gas safety, EICR, EPC — get reminded before deadlines, not after. Stay legal without the stress." },
+              { icon: Smartphone, title: "Works Everywhere", desc: "Desktop, tablet, phone. Check your properties from the sofa, the office, or the beach." },
+            ].map((feature, i) => (
+              <div key={i} className="flex gap-5 group">
+                <div className="flex-shrink-0 w-12 h-12 bg-white rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] flex items-center justify-center group-hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-shadow duration-300">
+                  <feature.icon className="w-6 h-6 text-slate-700" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg text-slate-900">{feature.title}</h3>
+                  <p className="text-slate-600 mt-1 leading-relaxed">{feature.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-32">
+        <div className="container mx-auto px-6">
+          <div className="relative overflow-hidden bg-[#FDF8F6] rounded-[28px] p-12 md:p-20 text-center shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#E8998D]/10 via-transparent to-[#F4A261]/10" />
+            <div className="relative">
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
+                Ready to take control of your properties?
+              </h2>
+              <p className="text-slate-600 text-lg mb-10 max-w-xl mx-auto">
+                Start your free trial today. No credit card required. Set up in under 5 minutes.
+              </p>
+              <Link href="/signup">
+                <Button size="lg" className="rounded-full px-8 py-6 text-lg bg-gradient-to-r from-[#E8998D] to-[#F4A261] text-white hover:opacity-90 shadow-xl shadow-[#E8998D]/20 hover:shadow-2xl hover:shadow-[#E8998D]/30 transition-all">
+                  Get Started Free
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-4 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
+      <footer className="bg-[#FDFBF9] border-t border-slate-100/50 py-20">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-12">
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Building2 className="h-6 w-6 text-emerald-500" />
-                <span className="font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">LetLog</span>
+              <Link href="/" className="flex items-center gap-3">
+                <Image src="/logo.svg" alt="LetLog" width={40} height={40} className="rounded-xl" />
+                <span className="font-semibold text-xl">
+                  <span className="bg-gradient-to-r from-[#E8998D] to-[#F4A261] bg-clip-text text-transparent">Let</span>
+                  <span>Log</span>
+                </span>
+              </Link>
+              <p className="text-slate-500 mt-4 max-w-xs">
+                Property management made simple for landlords, tenants, and contractors.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
+              <div>
+                <h4 className="font-semibold text-slate-900 mb-4">Product</h4>
+                <ul className="space-y-3 text-slate-600">
+                  <li><Link href="#features" className="hover:text-slate-900 transition-colors">Features</Link></li>
+                  <li><Link href="#pricing" className="hover:text-slate-900 transition-colors">Pricing</Link></li>
+                  <li><Link href="/blog" className="hover:text-slate-900 transition-colors">Blog</Link></li>
+                </ul>
               </div>
-              <p className="text-slate-400 text-sm">Property management made simple for UK landlords and letting agents.</p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-slate-400 text-sm">
-                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-                <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Resources</h4>
-              <ul className="space-y-2 text-slate-400 text-sm">
-                <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Contact</h4>
-              <ul className="space-y-2 text-slate-400 text-sm">
-                <li><a href="mailto:support@letlog.co.uk" className="hover:text-white transition-colors">support@letlog.co.uk</a></li>
-              </ul>
+              <div>
+                <h4 className="font-semibold text-slate-900 mb-4">Support</h4>
+                <ul className="space-y-3 text-slate-600">
+                  <li><Link href="/contact" className="hover:text-slate-900 transition-colors">Contact</Link></li>
+                  <li><Link href="/help" className="hover:text-slate-900 transition-colors">Help Centre</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-slate-900 mb-4">Legal</h4>
+                <ul className="space-y-3 text-slate-600">
+                  <li><Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy</Link></li>
+                  <li><Link href="/terms" className="hover:text-slate-900 transition-colors">Terms</Link></li>
+                </ul>
+              </div>
             </div>
           </div>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-slate-800">
-            <div className="flex items-center gap-2 text-slate-400">
-              <Smartphone className="h-5 w-5" />
-              <span className="text-sm">iOS & Android apps available</span>
-            </div>
-            <div className="text-slate-500 text-sm">
-              © 2026 LetLog. All rights reserved.
-            </div>
+          <div className="mt-12 pt-8 border-t border-slate-200 text-center text-slate-500 text-sm">
+            © {new Date().getFullYear()} LetLog. All rights reserved.
           </div>
         </div>
       </footer>
     </div>
-  )
-}
-
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
-  return (
-    <div className="group p-6 bg-slate-900/50 rounded-2xl border border-slate-800 hover:border-emerald-500/50 transition-all hover:-translate-y-1">
-      <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 mb-4 group-hover:scale-110 transition-transform">
-        {icon}
-      </div>
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="text-slate-400 text-sm leading-relaxed">{description}</p>
-    </div>
-  )
-}
-
-function TestimonialCard({ quote, author, role, rating }: { quote: string, author: string, role: string, rating: number }) {
-  return (
-    <div className="p-6 bg-slate-900/50 rounded-2xl border border-slate-800">
-      <div className="flex gap-1 mb-4">
-        {[...Array(rating)].map((_, i) => (
-          <Star key={i} className="h-5 w-5 fill-amber-400 text-amber-400" />
-        ))}
-      </div>
-      <p className="text-slate-300 mb-6 leading-relaxed">"{quote}"</p>
-      <div>
-        <div className="font-semibold">{author}</div>
-        <div className="text-sm text-slate-400">{role}</div>
-      </div>
-    </div>
-  )
-}
-
-function PricingCard({ 
-  name, 
-  price, 
-  period, 
-  description, 
-  features, 
-  highlighted = false,
-  ctaLink = '/signup'
-}: { 
-  name: string
-  price: string
-  period: string
-  description: string
-  features: string[]
-  highlighted?: boolean
-  ctaLink?: string
-}) {
-  return (
-    <div className={`p-8 rounded-2xl border transition-all ${
-      highlighted 
-        ? 'bg-gradient-to-b from-emerald-900/30 to-slate-900 border-emerald-500/50 scale-105 shadow-xl shadow-emerald-500/10' 
-        : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
-    }`}>
-      {highlighted && (
-        <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">Most Popular</div>
-      )}
-      <h3 className="text-2xl font-bold">{name}</h3>
-      <p className="text-slate-400 text-sm mb-4">{description}</p>
-      <div className="mb-6">
-        <span className="text-5xl font-bold">{price}</span>
-        <span className="text-slate-400">/{period}</span>
-      </div>
-      <ul className="space-y-3 mb-8">
-        {features.map((feature, i) => (
-          <li key={i} className="flex items-center gap-3 text-sm">
-            <Check className="h-5 w-5 text-emerald-500 flex-shrink-0" />
-            <span>{feature}</span>
-          </li>
-        ))}
-      </ul>
-      <Link 
-        href={ctaLink}
-        className={`block w-full py-3 rounded-xl font-medium text-center transition-all ${
-          highlighted 
-            ? 'bg-emerald-600 hover:bg-emerald-500 hover:scale-105' 
-            : 'bg-slate-800 hover:bg-slate-700'
-        }`}
-      >
-        {ctaLink === '/pricing' ? 'View Plans' : 'Get Started'}
-      </Link>
-    </div>
-  )
-}
-
-function FAQItem({ question, answer }: { question: string, answer: string }) {
-  const [isOpen, setIsOpen] = useState(false)
-  
-  return (
-    <div className="border border-slate-800 rounded-xl overflow-hidden">
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-900/50 transition-colors"
-      >
-        <span className="font-medium">{question}</span>
-        <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-      {isOpen && (
-        <div className="px-6 pb-4 text-slate-400 text-sm leading-relaxed">
-          {answer}
-        </div>
-      )}
-    </div>
-  )
+  );
 }

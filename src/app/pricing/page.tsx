@@ -1,186 +1,241 @@
-'use client'
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Check, Sparkles } from "lucide-react";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { Building2, Check, ArrowLeft } from 'lucide-react'
+const plans = [
+  {
+    id: "free",
+    name: "Tenant",
+    description: "Free forever for tenants",
+    price: "£0",
+    period: "",
+    features: [
+      "Report maintenance issues",
+      "Access tenancy documents",
+      "Track repair progress",
+      "Leave reviews for landlords & contractors",
+    ],
+    cta: "Get Started",
+    ctaLink: "/signup",
+    popular: false,
+  },
+  {
+    id: "basic",
+    name: "Basic",
+    description: "For landlords with 1-3 properties",
+    price: "£4.99",
+    period: "/month",
+    features: [
+      "Up to 3 properties",
+      "Unlimited tenancies",
+      "Document storage & sharing",
+      "Compliance reminders",
+      "Issue tracking",
+      "Tenant invitations",
+      "Email support",
+    ],
+    cta: "Start Free Trial",
+    ctaLink: "/signup?plan=basic",
+    popular: false,
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    description: "For landlords with larger portfolios",
+    price: "£9.99",
+    period: "/month",
+    features: [
+      "Unlimited properties",
+      "Unlimited tenancies",
+      "Document storage & sharing",
+      "Compliance reminders",
+      "Issue tracking",
+      "Tenant invitations",
+      "Contractor marketplace",
+      "Priority support",
+      "Analytics dashboard",
+    ],
+    cta: "Start Free Trial",
+    ctaLink: "/signup?plan=premium",
+    popular: true,
+  },
+  {
+    id: "contractor",
+    name: "Contractor",
+    description: "For tradespeople",
+    price: "£0",
+    period: "",
+    features: [
+      "Browse available jobs",
+      "Submit quotes",
+      "Build your reputation",
+      "Get reviews from clients",
+      "Verified badge (coming soon)",
+    ],
+    cta: "Get Started",
+    ctaLink: "/signup",
+    popular: false,
+  },
+];
 
 export default function PricingPage() {
-  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly')
-  const [loading, setLoading] = useState<string | null>(null)
-
-  const handleCheckout = async (plan: 'basic' | 'premium') => {
-    setLoading(plan)
-    try {
-      const response = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, billing }),
-      })
-      
-      const data = await response.json()
-      
-      if (data.url) {
-        window.location.href = data.url
-      } else if (data.error) {
-        alert(data.error === 'Unauthorized' 
-          ? 'Please sign up or log in first to subscribe.' 
-          : data.error)
-        if (data.error === 'Unauthorized') {
-          window.location.href = '/signup'
-        }
-      }
-    } catch (error) {
-      console.error('Checkout error:', error)
-      alert('Something went wrong. Please try again.')
-    } finally {
-      setLoading(null)
-    }
-  }
-
-  const prices = {
-    basic: { monthly: '£4.99', yearly: '£49.99', savings: '£9.89' },
-    premium: { monthly: '£9.99', yearly: '£99.99', savings: '£19.89' },
-  }
-
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-lg border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <Building2 className="h-8 w-8 text-emerald-500" />
-              <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">LetLog</span>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-3">
+            <Image src="/logo.svg" alt="LetLog" width={40} height={40} className="rounded-xl shadow-lg" />
+            <span className="font-semibold text-xl tracking-tight">
+              <span className="bg-gradient-to-r from-[#E8998D] to-[#F4A261] bg-clip-text text-transparent">Let</span>
+              <span>Log</span>
+            </span>
+          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/login">
+              <Button variant="ghost" className="rounded-full px-5">Sign In</Button>
             </Link>
-            <div className="flex items-center gap-4">
-              <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Home
-              </Link>
-            </div>
+            <Link href="/signup">
+              <Button className="rounded-full px-5 bg-slate-900 hover:bg-slate-800">Get Started</Button>
+            </Link>
           </div>
         </div>
-      </nav>
+      </header>
 
-      {/* Pricing Section */}
-      <section className="pt-32 pb-24 px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Simple, Transparent Pricing</h1>
-            <p className="text-slate-400 text-lg mb-8">Start with a 14-day free trial. No credit card required.</p>
-            
-            {/* Billing Toggle */}
-            <div className="inline-flex items-center gap-4 p-1 bg-slate-800 rounded-xl">
-              <button
-                onClick={() => setBilling('monthly')}
-                className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                  billing === 'monthly' 
-                    ? 'bg-emerald-600 text-white' 
-                    : 'text-slate-400 hover:text-white'
+      {/* Hero */}
+      <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
+        <div className="container mx-auto px-6 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
+            Simple, transparent pricing
+          </h1>
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+            Free for tenants and contractors. Affordable plans for landlords of any size.
+          </p>
+        </div>
+      </section>
+
+      {/* Pricing Cards */}
+      <section className="py-16">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            {plans.map((plan) => (
+              <Card 
+                key={plan.id} 
+                className={`rounded-2xl relative ${
+                  plan.popular 
+                    ? 'border-2 border-[#E8998D] shadow-xl' 
+                    : 'border border-slate-200'
                 }`}
               >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBilling('yearly')}
-                className={`px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  billing === 'yearly' 
-                    ? 'bg-emerald-600 text-white' 
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Yearly
-                <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">
-                  Save 2 months
-                </span>
-              </button>
-            </div>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            {/* Basic Tier */}
-            <div className="p-8 rounded-2xl border bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-all">
-              <h3 className="text-2xl font-bold">Basic</h3>
-              <p className="text-slate-400 text-sm mb-4">For small landlords</p>
-              <div className="mb-6">
-                <span className="text-5xl font-bold">{prices.basic[billing]}</span>
-                <span className="text-slate-400">/{billing === 'monthly' ? 'month' : 'year'}</span>
-                {billing === 'yearly' && (
-                  <div className="text-sm text-emerald-400 mt-1">Save {prices.basic.savings}/year</div>
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-gradient-to-r from-[#E8998D] to-[#F4A261] text-white rounded-full px-4 py-1">
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Most Popular
+                    </Badge>
+                  </div>
                 )}
-              </div>
-              <ul className="space-y-3 mb-8">
-                {[
-                  'Up to 3 properties',
-                  'Tenant management',
-                  'Issue/maintenance tracking',
-                  'Document storage (1GB)',
-                  'Email support',
-                ].map((feature, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm">
-                    <Check className="h-5 w-5 text-emerald-500 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <button 
-                onClick={() => handleCheckout('basic')}
-                disabled={loading === 'basic'}
-                className="block w-full py-3 rounded-xl font-medium text-center transition-all bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading === 'basic' ? 'Loading...' : 'Start Free Trial'}
-              </button>
-            </div>
-
-            {/* Premium Tier */}
-            <div className="p-8 rounded-2xl border bg-gradient-to-b from-emerald-900/30 to-slate-900 border-emerald-500/50 scale-105 shadow-xl shadow-emerald-500/10 transition-all">
-              <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">Most Popular</div>
-              <h3 className="text-2xl font-bold">Premium</h3>
-              <p className="text-slate-400 text-sm mb-4">For serious investors</p>
-              <div className="mb-6">
-                <span className="text-5xl font-bold">{prices.premium[billing]}</span>
-                <span className="text-slate-400">/{billing === 'monthly' ? 'month' : 'year'}</span>
-                {billing === 'yearly' && (
-                  <div className="text-sm text-emerald-400 mt-1">Save {prices.premium.savings}/year</div>
-                )}
-              </div>
-              <ul className="space-y-3 mb-8">
-                {[
-                  'Up to 50 properties',
-                  'Everything in Basic',
-                  'Advanced reporting & analytics',
-                  'Contractor marketplace access',
-                  'Compliance tracking',
-                  'Document storage (10GB)',
-                  'Priority support',
-                ].map((feature, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm">
-                    <Check className="h-5 w-5 text-emerald-500 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <button 
-                onClick={() => handleCheckout('premium')}
-                disabled={loading === 'premium'}
-                className="block w-full py-3 rounded-xl font-medium text-center transition-all bg-emerald-600 hover:bg-emerald-500 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading === 'premium' ? 'Loading...' : 'Start Free Trial'}
-              </button>
-            </div>
-          </div>
-
-          {/* FAQ */}
-          <div className="mt-16 text-center">
-            <p className="text-slate-400">
-              All plans include a 14-day free trial. Cancel anytime.
-            </p>
-            <p className="text-slate-500 text-sm mt-2">
-              Questions? Email <a href="mailto:support@letlog.co.uk" className="text-emerald-400 hover:underline">support@letlog.co.uk</a>
-            </p>
+                <CardHeader className="pt-8">
+                  <CardTitle className="text-xl">{plan.name}</CardTitle>
+                  <CardDescription>{plan.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-6">
+                    <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
+                    <span className="text-slate-600">{plan.period}</span>
+                  </div>
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                        <Check className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Link href={plan.ctaLink} className="w-full">
+                    <Button 
+                      className={`w-full rounded-xl ${
+                        plan.popular 
+                          ? 'bg-gradient-to-r from-[#E8998D] to-[#F4A261] hover:opacity-90' 
+                          : 'bg-slate-900 hover:bg-slate-800'
+                      }`}
+                    >
+                      {plan.cta}
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
+
+      {/* FAQ */}
+      <section className="py-20 bg-slate-50">
+        <div className="container mx-auto px-6 max-w-3xl">
+          <h2 className="text-3xl font-bold text-slate-900 text-center mb-12">
+            Frequently Asked Questions
+          </h2>
+          <div className="space-y-6">
+            {[
+              {
+                q: "Is there a free trial?",
+                a: "Yes! Landlord plans come with a 14-day free trial. No credit card required to start.",
+              },
+              {
+                q: "Can I change plans later?",
+                a: "Absolutely. You can upgrade or downgrade your plan at any time. Changes take effect immediately.",
+              },
+              {
+                q: "What happens if I exceed my property limit?",
+                a: "We'll notify you and give you the option to upgrade. Your existing properties won't be affected.",
+              },
+              {
+                q: "Is my data secure?",
+                a: "Yes. We use industry-standard encryption and are fully GDPR compliant. Your data is yours.",
+              },
+              {
+                q: "Can I cancel anytime?",
+                a: "Yes, you can cancel your subscription at any time. You'll retain access until the end of your billing period.",
+              },
+            ].map((faq, i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-2">{faq.q}</h3>
+                <p className="text-slate-600">{faq.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-20">
+        <div className="container mx-auto px-6 text-center">
+          <h2 className="text-3xl font-bold text-slate-900 mb-4">
+            Ready to simplify property management?
+          </h2>
+          <p className="text-slate-600 mb-8">
+            Start your free trial today. No credit card required.
+          </p>
+          <Link href="/signup">
+            <Button size="lg" className="rounded-full px-8 bg-slate-900 hover:bg-slate-800">
+              Get Started Free
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-slate-50 border-t border-slate-100 py-8">
+        <div className="container mx-auto px-6 text-center text-slate-500 text-sm">
+          © {new Date().getFullYear()} LetLog. All rights reserved.
+        </div>
+      </footer>
     </div>
-  )
+  );
 }
