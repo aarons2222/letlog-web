@@ -9,6 +9,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { RoleNavigation, RoleQuickActions, RoleBadge } from "@/components/RoleNavigation";
+import { Sidebar } from "@/components/Sidebar";
+import { DashboardEmptyState } from "@/components/EmptyState";
 import { 
   Home, Key, Wrench, AlertTriangle, FileText, 
   MessageSquare, Briefcase, Star, Plus, ClipboardList,
@@ -277,16 +279,8 @@ export default function DashboardPage() {
       </motion.header>
 
       <div className="flex">
-        {/* Sidebar Navigation - Role-based */}
-        <aside className="hidden md:flex flex-col w-64 min-h-[calc(100vh-73px)] bg-white border-r border-slate-200 p-4">
-          <div className="mb-4">
-            <RoleBadge role={role} />
-          </div>
-          <RoleNavigation role={role} />
-          <div className="mt-auto pt-4 border-t border-slate-200">
-            <NavLink href="/pricing" icon={Star} label="Upgrade" />
-          </div>
-        </aside>
+        {/* Sidebar Navigation - Collapsible */}
+        <Sidebar role={role} />
 
         {/* Main Content */}
         <main className="flex-1 p-6">
@@ -300,6 +294,15 @@ export default function DashboardPage() {
                 animate="visible"
                 variants={containerVariants}
               >
+                {/* Show empty state for new users */}
+                {role === 'landlord' && stats.properties === 0 ? (
+                  <DashboardEmptyState role={role} />
+                ) : role === 'contractor' && stats.pendingQuotes === 0 ? (
+                  <DashboardEmptyState role={role} />
+                ) : role === 'tenant' && stats.openIssues === 0 && activities.length === 0 ? (
+                  <DashboardEmptyState role={role} />
+                ) : (
+                  <>
                 {/* Welcome Section */}
                 <motion.div variants={fadeInUp} className="mb-8">
                   <div className="flex items-center gap-3 mb-2">
@@ -391,6 +394,8 @@ export default function DashboardPage() {
                     </Card>
                   </motion.div>
                 </div>
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
