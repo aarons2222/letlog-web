@@ -156,62 +156,69 @@ export default function DashboardPage() {
       complianceAlerts: 0,
     };
 
-    try {
-      if (userRole === 'landlord') {
-        // Count properties (handle table not existing)
-        try {
-          const { count: propCount } = await supabase
-            .from('properties')
-            .select('*', { count: 'exact', head: true })
-            .eq('landlord_id', userId);
-          newStats.properties = propCount || 0;
-        } catch (e) { /* table may not exist */ }
-
-        // Count active tenancies
-        try {
-          const { count: tenancyCount } = await supabase
-            .from('tenancies')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'active');
-          newStats.tenancies = tenancyCount || 0;
-        } catch (e) { /* table may not exist */ }
-
-        // Count open issues
-        try {
-          const { count: issueCount } = await supabase
-            .from('issues')
-            .select('*', { count: 'exact', head: true })
-            .in('status', ['open', 'in_progress']);
-          newStats.openIssues = issueCount || 0;
-        } catch (e) { /* table may not exist */ }
-
-        // Count pending quotes
-        try {
-          const { count: quoteCount } = await supabase
-            .from('quotes')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'pending');
-          newStats.pendingQuotes = quoteCount || 0;
-        } catch (e) { /* table may not exist */ }
-
-        // Count compliance alerts
-        try {
-          const thirtyDaysFromNow = new Date();
-          thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-          
-          const { count: complianceCount } = await supabase
-            .from('compliance_items')
-            .select('*', { count: 'exact', head: true })
-            .lt('expiry_date', thirtyDaysFromNow.toISOString())
-            .eq('status', 'valid');
-          newStats.complianceAlerts = complianceCount || 0;
-        } catch (e) { /* table may not exist */ }
+    if (userRole === 'landlord') {
+      // Count properties - try landlord_id first, then user_id
+      const { count: propCount, error: propError } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('landlord_id', userId);
+      
+      if (propError) {
+        // Maybe column is user_id instead
+        const { count: propCount2 } = await supabase
+          .from('properties')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId);
+        newStats.properties = propCount2 || 0;
+      } else {
+        newStats.properties = propCount || 0;
       }
-    } catch (err) {
-      console.error('Stats load error:', err);
+
+      // Count active tenancies for this landlord's properties
+      const { data: propIds } = await supabase
+        .from('properties')
+        .select('id')
+        .or(`landlord_id.eq.${userId},user_id.eq.${userId}`);
+      
+      if (propIds && propIds.length > 0) {
+        const ids = propIds.map(p => p.id);
+        const { count: tenancyCount } = await supabase
+          .from('tenancies')
+          .select('*', { count: 'exact', head: true })
+          .in('property_id', ids)
+          .eq('status', 'active');
+        newStats.tenancies = tenancyCount || 0;
+
+        // Count open issues for this landlord's properties
+        const { count: issueCount } = await supabase
+          .from('issues')
+          .select('*', { count: 'exact', head: true })
+          .in('property_id', ids)
+          .in('status', ['open', 'in_progress']);
+        newStats.openIssues = issueCount || 0;
+      }
+
+      // Count pending quotes (for landlord's tenders)
+      const { count: quoteCount } = await supabase
+        .from('quotes')
+        .select('*, tenders!inner(landlord_id)', { count: 'exact', head: true })
+        .eq('tenders.landlord_id', userId)
+        .eq('status', 'pending');
+      newStats.pendingQuotes = quoteCount || 0;
+
+      // Count compliance alerts (expiring within 30 days)
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      
+      const { count: complianceCount } = await supabase
+        .from('compliance_items')
+        .select('*', { count: 'exact', head: true })
+        .lt('expiry_date', thirtyDaysFromNow.toISOString())
+        .eq('status', 'valid');
+      newStats.complianceAlerts = complianceCount || 0;
     }
 
-    // Always set stats, even if all queries failed
+    // Always set stats
     setStats(newStats);
   }
 
