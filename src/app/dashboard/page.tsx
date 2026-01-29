@@ -556,14 +556,45 @@ function QuickAction({ href, icon: Icon, label }: { href: string; icon: React.El
 
 function LoadingSkeleton() {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
-      <div className="space-y-2">
-        <div className="h-10 w-64 bg-slate-200 rounded-lg animate-pulse" />
-        <div className="h-6 w-96 bg-slate-100 rounded-lg animate-pulse" />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      className="flex flex-col items-center justify-center min-h-[60vh]"
+    >
+      {/* Animated Logo */}
+      <motion.div
+        animate={{ 
+          scale: [1, 1.1, 1],
+          rotate: [0, 5, -5, 0]
+        }}
+        transition={{ 
+          duration: 2, 
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        className="w-20 h-20 bg-gradient-to-br from-[#E8998D] to-[#F4A261] rounded-2xl flex items-center justify-center shadow-lg mb-6"
+      >
+        <span className="text-white font-bold text-3xl">L</span>
+      </motion.div>
+      
+      {/* Loading text */}
+      <motion.p
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+        className="text-slate-500 font-medium"
+      >
+        Loading your dashboard...
+      </motion.p>
+
+      {/* Skeleton cards below */}
+      <div className="w-full max-w-4xl mt-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-28 bg-slate-100 rounded-2xl animate-pulse" />
+          <motion.div 
+            key={i} 
+            className="h-24 bg-slate-100 rounded-2xl"
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+          />
         ))}
       </div>
     </motion.div>
