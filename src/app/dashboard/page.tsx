@@ -150,7 +150,7 @@ export default function DashboardPage() {
   }, []);
 
   async function loadStats(supabase: ReturnType<typeof createClient>, userId: string, userRole: Role) {
-    // Default stats - will show empty state for new users
+    // Default stats
     let newStats = {
       properties: 0,
       tenancies: 0,
@@ -160,63 +160,75 @@ export default function DashboardPage() {
     };
 
     if (userRole === 'landlord') {
-      // Count properties
-      const { count: propCount, error: propError } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true })
-        .eq('landlord_id', userId);
-      
-      if (propError) {
-        console.error('Property count error:', propError);
+      // Simple property count - no filters to avoid RLS issues
+      try {
+        const { data: properties, error: propError } = await supabase
+          .from('properties')
+          .select('id, landlord_id');
+        
+        if (propError) {
+          console.error('Properties error:', propError.message, propError.details, propError.hint);
+        } else {
+          // Filter client-side
+          const myProps = properties?.filter(p => p.landlord_id === userId) || [];
+          newStats.properties = myProps.length;
+          console.log('Properties loaded:', { total: properties?.length, mine: myProps.length, userId });
+          
+          if (myProps.length > 0) {
+            const propIds = myProps.map(p => p.id);
+            
+            // Count tenancies
+            try {
+              const { data: tenancies } = await supabase
+                .from('tenancies')
+                .select('id, property_id, status');
+              const myTenancies = tenancies?.filter(t => propIds.includes(t.property_id) && t.status === 'active') || [];
+              newStats.tenancies = myTenancies.length;
+            } catch (e) {
+              console.error('Tenancies error:', e);
+            }
+
+            // Count issues
+            try {
+              const { data: issues } = await supabase
+                .from('issues')
+                .select('id, property_id, status');
+              const myIssues = issues?.filter(i => propIds.includes(i.property_id) && ['open', 'in_progress'].includes(i.status)) || [];
+              newStats.openIssues = myIssues.length;
+            } catch (e) {
+              console.error('Issues error:', e);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Stats load failed:', e);
       }
-      console.log('Property count result:', { propCount, userId });
-      newStats.properties = propCount || 0;
 
-      // Get property IDs for this landlord
-      const { data: propIds } = await supabase
-        .from('properties')
-        .select('id')
-        .eq('landlord_id', userId);
-      
-      if (propIds && propIds.length > 0) {
-        const ids = propIds.map(p => p.id);
-        const { count: tenancyCount } = await supabase
-          .from('tenancies')
-          .select('*', { count: 'exact', head: true })
-          .in('property_id', ids)
-          .eq('status', 'active');
-        newStats.tenancies = tenancyCount || 0;
-
-        // Count open issues for this landlord's properties
-        const { count: issueCount } = await supabase
-          .from('issues')
-          .select('*', { count: 'exact', head: true })
-          .in('property_id', ids)
-          .in('status', ['open', 'in_progress']);
-        newStats.openIssues = issueCount || 0;
+      // Count quotes - simplified
+      try {
+        const { data: quotes } = await supabase
+          .from('quotes')
+          .select('id, status');
+        newStats.pendingQuotes = quotes?.filter(q => q.status === 'pending').length || 0;
+      } catch (e) {
+        console.error('Quotes error:', e);
       }
 
-      // Count pending quotes (for landlord's tenders)
-      const { count: quoteCount } = await supabase
-        .from('quotes')
-        .select('*, tenders!inner(landlord_id)', { count: 'exact', head: true })
-        .eq('tenders.landlord_id', userId)
-        .eq('status', 'pending');
-      newStats.pendingQuotes = quoteCount || 0;
-
-      // Count compliance alerts (expiring within 30 days)
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-      
-      const { count: complianceCount } = await supabase
-        .from('compliance_items')
-        .select('*', { count: 'exact', head: true })
-        .lt('expiry_date', thirtyDaysFromNow.toISOString())
-        .eq('status', 'valid');
-      newStats.complianceAlerts = complianceCount || 0;
+      // Count compliance alerts
+      try {
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+        const { data: compliance } = await supabase
+          .from('compliance_items')
+          .select('id, expiry_date, status');
+        newStats.complianceAlerts = compliance?.filter(c => 
+          c.status === 'valid' && new Date(c.expiry_date) < thirtyDaysFromNow
+        ).length || 0;
+      } catch (e) {
+        console.error('Compliance error:', e);
+      }
     }
 
-    // Always set stats
     setStats(newStats);
   }
 
