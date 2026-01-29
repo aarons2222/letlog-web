@@ -189,17 +189,9 @@ export default function SettingsPage() {
         className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50"
       >
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm" className="gap-2">
-                <ArrowLeft className="w-4 h-4" />
-                Dashboard
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2">
-              <Shield className="w-6 h-6 text-blue-500" />
-              <h1 className="text-xl font-bold text-slate-800 dark:text-white">Account Settings</h1>
-            </div>
+          <div className="flex items-center gap-3">
+            <Shield className="w-6 h-6 text-blue-500" />
+            <h1 className="text-xl font-bold text-slate-800 dark:text-white">Account Settings</h1>
           </div>
         </div>
       </motion.header>
