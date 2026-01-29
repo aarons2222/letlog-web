@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -13,11 +14,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 import { 
   ArrowLeft, Shield, Search, AlertTriangle, CheckCircle, 
-  Clock, Upload, FileText, Home, Calendar, Filter, Plus,
-  Flame, Zap, Bug, FileCheck
+  Clock, Upload, FileText, Home, Calendar, Plus,
+  Flame, Zap, Bug, FileCheck, X, Loader2
 } from "lucide-react";
 
 // Compliance types with UK requirements
@@ -59,69 +70,27 @@ const complianceTypes = {
   },
 };
 
-// Mock data
-const mockCompliance = [
-  {
-    id: "1",
-    property_id: "1",
-    property_address: "42 Oak Lane, Flat 2",
-    compliance_type: "gas_safety",
-    issue_date: "2025-08-15",
-    expiry_date: "2026-08-14",
-    status: "valid",
-    certificate_number: "GS-2025-12345",
-    inspector_name: "British Gas",
-    document_url: null,
-  },
-  {
-    id: "2",
-    property_id: "1",
-    property_address: "42 Oak Lane, Flat 2",
-    compliance_type: "eicr",
-    issue_date: "2024-03-01",
-    expiry_date: "2029-02-28",
-    status: "valid",
-    certificate_number: "EICR-2024-67890",
-    inspector_name: "Sparks Electrical",
-    document_url: null,
-  },
-  {
-    id: "3",
-    property_id: "2",
-    property_address: "15 High Street",
-    compliance_type: "gas_safety",
-    issue_date: "2025-01-10",
-    expiry_date: "2026-01-09",
-    status: "expiring_soon",
-    certificate_number: "GS-2025-54321",
-    inspector_name: "Local Gas Services",
-    document_url: null,
-  },
-  {
-    id: "4",
-    property_id: "2",
-    property_address: "15 High Street",
-    compliance_type: "epc",
-    issue_date: "2020-06-15",
-    expiry_date: "2030-06-14",
-    status: "valid",
-    certificate_number: "EPC-0012-3456-7890",
-    inspector_name: "Energy Assessors Ltd",
-    document_url: null,
-  },
-  {
-    id: "5",
-    property_id: "3",
-    property_address: "8 Mill Road",
-    compliance_type: "eicr",
-    issue_date: "2021-11-20",
-    expiry_date: "2026-11-19",
-    status: "valid",
-    certificate_number: "EICR-2021-11111",
-    inspector_name: "Safe Electrics",
-    document_url: null,
-  },
-];
+interface ComplianceRecord {
+  id: string;
+  property_id: string;
+  compliance_type: string;
+  certificate_number: string;
+  issue_date: string;
+  expiry_date: string;
+  inspector_name: string;
+  status: string;
+  document_url: string | null;
+  properties?: {
+    address_line_1: string;
+    city: string;
+  };
+}
+
+interface Property {
+  id: string;
+  address_line_1: string;
+  city: string;
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -137,15 +106,108 @@ const itemVariants = {
 };
 
 export default function CompliancePage() {
-  const [records, setRecords] = useState(mockCompliance);
+  const [records, setRecords] = useState<ComplianceRecord[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    property_id: "",
+    compliance_type: "",
+    certificate_number: "",
+    issue_date: "",
+    expiry_date: "",
+    inspector_name: "",
+  });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function loadData() {
+    const supabase = createClient();
+    
+    try {
+      // Fetch compliance records
+      const { data: complianceData, error: complianceError } = await supabase
+        .from("compliance_items")
+        .select(`
+          *,
+          properties (
+            address_line_1,
+            city
+          )
+        `)
+        .order("expiry_date", { ascending: true });
+
+      if (complianceError) throw complianceError;
+      setRecords(complianceData || []);
+
+      // Fetch properties for the add form
+      const { data: propertiesData } = await supabase
+        .from("properties")
+        .select("id, address_line_1, city")
+        .order("address_line_1");
+
+      setProperties(propertiesData || []);
+    } catch (error) {
+      console.error("Error loading compliance data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleAddCompliance(e: React.FormEvent) {
+    e.preventDefault();
+    setIsSaving(true);
+
+    const supabase = createClient();
+
+    try {
+      const { error } = await supabase.from("compliance_items").insert({
+        property_id: formData.property_id,
+        compliance_type: formData.compliance_type,
+        certificate_number: formData.certificate_number,
+        issue_date: formData.issue_date,
+        expiry_date: formData.expiry_date,
+        inspector_name: formData.inspector_name,
+      });
+
+      if (error) throw error;
+
+      // Reset form and close dialog
+      setFormData({
+        property_id: "",
+        compliance_type: "",
+        certificate_number: "",
+        issue_date: "",
+        expiry_date: "",
+        inspector_name: "",
+      });
+      setIsAddDialogOpen(false);
+      
+      // Reload data
+      loadData();
+    } catch (error: any) {
+      console.error("Error adding compliance:", error);
+      alert(error.message || "Failed to add compliance record");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   const filteredRecords = records.filter(r => {
+    const address = r.properties 
+      ? `${r.properties.address_line_1}, ${r.properties.city}`
+      : "";
     const matchesSearch = 
-      r.property_address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.certificate_number.toLowerCase().includes(searchQuery.toLowerCase());
+      address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (r.certificate_number || "").toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesType = !filterType || r.compliance_type === filterType;
     const matchesStatus = !filterStatus || r.status === filterStatus;
@@ -161,10 +223,16 @@ export default function CompliancePage() {
     expired: records.filter(r => r.status === "expired").length,
   };
 
-  // Group by status for priority display
   const expiringSoon = filteredRecords.filter(r => r.status === "expiring_soon");
   const expired = filteredRecords.filter(r => r.status === "expired");
-  const valid = filteredRecords.filter(r => r.status === "valid");
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
@@ -187,10 +255,120 @@ export default function CompliancePage() {
               <h1 className="text-xl font-bold text-slate-800 dark:text-white">Compliance Tracker</h1>
             </div>
           </div>
-          <Button className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Certificate
-          </Button>
+          
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Certificate
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Add Compliance Certificate</DialogTitle>
+                <DialogDescription>
+                  Record a new compliance certificate for one of your properties.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleAddCompliance}>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="property">Property</Label>
+                    <Select
+                      value={formData.property_id}
+                      onValueChange={(v) => setFormData({ ...formData, property_id: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select property" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {properties.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.address_line_1}, {p.city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="type">Certificate Type</Label>
+                    <Select
+                      value={formData.compliance_type}
+                      onValueChange={(v) => setFormData({ ...formData, compliance_type: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(complianceTypes).map(([key, value]) => (
+                          <SelectItem key={key} value={key}>
+                            {value.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="certificate_number">Certificate Number</Label>
+                    <Input
+                      id="certificate_number"
+                      value={formData.certificate_number}
+                      onChange={(e) => setFormData({ ...formData, certificate_number: e.target.value })}
+                      placeholder="e.g., GS-2026-12345"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="issue_date">Issue Date</Label>
+                      <Input
+                        id="issue_date"
+                        type="date"
+                        value={formData.issue_date}
+                        onChange={(e) => setFormData({ ...formData, issue_date: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="expiry_date">Expiry Date</Label>
+                      <Input
+                        id="expiry_date"
+                        type="date"
+                        value={formData.expiry_date}
+                        onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="inspector_name">Inspector / Company</Label>
+                    <Input
+                      id="inspector_name"
+                      value={formData.inspector_name}
+                      onChange={(e) => setFormData({ ...formData, inspector_name: e.target.value })}
+                      placeholder="e.g., British Gas"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Add Certificate"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </motion.header>
 
@@ -333,7 +511,18 @@ export default function CompliancePage() {
               className="text-center py-12"
             >
               <Shield className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">No compliance records found</p>
+              <p className="text-slate-500 mb-4">
+                {records.length === 0 
+                  ? "No compliance records yet" 
+                  : "No records match your filters"
+                }
+              </p>
+              {records.length === 0 && (
+                <Button onClick={() => setIsAddDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Your First Certificate
+                </Button>
+              )}
             </motion.div>
           )}
         </motion.div>
@@ -381,7 +570,7 @@ export default function CompliancePage() {
   );
 }
 
-function ComplianceCard({ record }: { record: typeof mockCompliance[0] }) {
+function ComplianceCard({ record }: { record: ComplianceRecord }) {
   const typeInfo = complianceTypes[record.compliance_type as keyof typeof complianceTypes];
   const Icon = typeInfo?.icon || FileText;
 
@@ -394,10 +583,13 @@ function ComplianceCard({ record }: { record: typeof mockCompliance[0] }) {
   const status = statusConfig[record.status as keyof typeof statusConfig];
   const StatusIcon = status?.icon || CheckCircle;
 
-  // Calculate days until expiry
   const expiryDate = new Date(record.expiry_date);
   const today = new Date();
   const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  const propertyAddress = record.properties 
+    ? `${record.properties.address_line_1}, ${record.properties.city}`
+    : "Unknown Property";
 
   const colorClasses: Record<string, string> = {
     orange: "bg-orange-100 dark:bg-orange-900/30 text-orange-600",
@@ -416,12 +608,10 @@ function ComplianceCard({ record }: { record: typeof mockCompliance[0] }) {
       <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow bg-white/70 dark:bg-slate-900/70 backdrop-blur">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row md:items-center gap-4">
-            {/* Type Icon */}
             <div className={`w-12 h-12 rounded-xl ${colorClasses[typeInfo?.color || "blue"]} flex items-center justify-center flex-shrink-0`}>
               <Icon className="w-6 h-6" />
             </div>
 
-            {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -430,7 +620,7 @@ function ComplianceCard({ record }: { record: typeof mockCompliance[0] }) {
                   </h3>
                   <p className="text-sm text-slate-500 flex items-center gap-1">
                     <Home className="w-3 h-3" />
-                    {record.property_address}
+                    {propertyAddress}
                   </p>
                 </div>
                 <Badge className={status?.color}>
@@ -450,13 +640,14 @@ function ComplianceCard({ record }: { record: typeof mockCompliance[0] }) {
                     : `${Math.abs(daysUntilExpiry)} days overdue`
                   }
                 </span>
-                <span className="text-slate-400">
-                  #{record.certificate_number}
-                </span>
+                {record.certificate_number && (
+                  <span className="text-slate-400">
+                    #{record.certificate_number}
+                  </span>
+                )}
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex gap-2 flex-shrink-0">
               <Button variant="outline" size="sm" className="gap-1">
                 <FileText className="w-4 h-4" />

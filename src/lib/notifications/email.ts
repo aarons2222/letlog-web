@@ -535,3 +535,166 @@ export const notify = {
   welcome: (data: { email: string; name: string; dashboardUrl: string }) =>
     sendNotification({ to: data.email, type: "welcome", data }),
 };
+
+/**
+ * Send compliance reminder email with multiple expiring items
+ */
+export interface ComplianceReminderItem {
+  propertyAddress: string;
+  type: string;
+  expiryDate: string;
+  daysRemaining: number;
+}
+
+export interface ComplianceReminderData {
+  to: string;
+  name: string;
+  items: ComplianceReminderItem[];
+}
+
+export async function sendComplianceReminderEmail(data: ComplianceReminderData): Promise<void> {
+  const { to, name, items } = data;
+  
+  const urgentItems = items.filter(i => i.daysRemaining <= 7);
+  const soonItems = items.filter(i => i.daysRemaining > 7);
+  
+  const subject = urgentItems.length > 0
+    ? `⚠️ URGENT: ${urgentItems.length} compliance certificate${urgentItems.length > 1 ? 's' : ''} expiring soon`
+    : `Compliance reminder: ${items.length} certificate${items.length > 1 ? 's' : ''} expiring in 30 days`;
+
+  const itemsHtml = items.map(item => `
+    <tr>
+      <td style="padding: 12px; border-bottom: 1px solid #eee;">
+        <strong>${item.propertyAddress}</strong>
+      </td>
+      <td style="padding: 12px; border-bottom: 1px solid #eee;">
+        ${item.type}
+      </td>
+      <td style="padding: 12px; border-bottom: 1px solid #eee;">
+        ${item.expiryDate}
+      </td>
+      <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;">
+        <span style="
+          display: inline-block;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: 600;
+          ${item.daysRemaining <= 7 
+            ? 'background: #fee2e2; color: #991b1b;' 
+            : item.daysRemaining <= 14 
+              ? 'background: #fef3c7; color: #92400e;'
+              : 'background: #dbeafe; color: #1e40af;'
+          }
+        ">
+          ${item.daysRemaining} days
+        </span>
+      </td>
+    </tr>
+  `).join('');
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 20px;">
+      
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 30px;">
+        <div style="display: inline-block; background: linear-gradient(135deg, #E8998D, #F4A261); width: 50px; height: 50px; border-radius: 12px; line-height: 50px; margin-bottom: 10px;">
+          <span style="color: white; font-size: 24px; font-weight: bold;">L</span>
+        </div>
+        <h1 style="margin: 0; font-size: 24px;">
+          <span style="color: #E8998D;">Let</span><span style="color: #1a1a1a;">Log</span>
+        </h1>
+      </div>
+
+      <!-- Alert Banner -->
+      ${urgentItems.length > 0 ? `
+        <div style="background: #fee2e2; border-left: 4px solid #dc2626; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+          <p style="margin: 0; color: #991b1b; font-weight: 600;">
+            ⚠️ ${urgentItems.length} certificate${urgentItems.length > 1 ? 's' : ''} expiring within 7 days!
+          </p>
+        </div>
+      ` : ''}
+
+      <h2 style="color: #1a1a1a; margin-bottom: 8px;">Compliance Reminder</h2>
+      <p style="color: #666; margin-bottom: 24px;">
+        Hi ${name},<br><br>
+        The following compliance certificates are expiring soon and need your attention:
+      </p>
+
+      <!-- Items Table -->
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+        <thead>
+          <tr style="background: #f8f8f8;">
+            <th style="padding: 12px; text-align: left; font-weight: 600; color: #666;">Property</th>
+            <th style="padding: 12px; text-align: left; font-weight: 600; color: #666;">Certificate</th>
+            <th style="padding: 12px; text-align: left; font-weight: 600; color: #666;">Expires</th>
+            <th style="padding: 12px; text-align: center; font-weight: 600; color: #666;">Time Left</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemsHtml}
+        </tbody>
+      </table>
+
+      <!-- CTA -->
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://letlog.app'}/compliance" 
+           style="display: inline-block; background: linear-gradient(135deg, #E8998D, #F4A261); color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+          View Compliance Dashboard
+        </a>
+      </div>
+
+      <!-- Tips -->
+      <div style="background: #f8f8f8; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+        <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #666;">💡 Quick Tips</h3>
+        <ul style="margin: 0; padding-left: 20px; color: #666; font-size: 14px;">
+          <li>Book renewals at least 2 weeks before expiry</li>
+          <li>Upload new certificates to LetLog for easy tracking</li>
+          <li>Set custom reminder periods in your settings</li>
+        </ul>
+      </div>
+
+      <!-- Footer -->
+      <div style="text-align: center; color: #999; font-size: 12px; border-top: 1px solid #eee; padding-top: 20px;">
+        <p>This is an automated reminder from LetLog.</p>
+        <p>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://letlog.app'}/settings/notifications" style="color: #E8998D;">
+            Manage notification preferences
+          </a>
+        </p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  // Send via your email provider (Resend, SendGrid, etc.)
+  // For now, log to console in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('📧 Compliance Reminder Email:');
+    console.log('To:', to);
+    console.log('Subject:', subject);
+    console.log('Items:', items.length);
+    return;
+  }
+
+  // Production: Send via Resend or SendGrid
+  if (process.env.RESEND_API_KEY) {
+    const { Resend } = await import('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    
+    await resend.emails.send({
+      from: process.env.EMAIL_FROM || 'LetLog <notifications@letlog.app>',
+      to,
+      subject,
+      html,
+    });
+  } else {
+    console.warn('No email provider configured. Set RESEND_API_KEY.');
+  }
+}
