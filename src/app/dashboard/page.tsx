@@ -97,12 +97,12 @@ export default function DashboardPage() {
           return;
         }
 
-        // Fetch user profile
-        const { data: profile, error: profileError } = await supabase
+        // Fetch user profile (use maybeSingle to avoid 406 error)
+        const { data: profile } = await supabase
           .from('profiles')
           .select('id, email, full_name, role')
           .eq('id', authUser.id)
-          .single();
+          .maybeSingle();
 
         // Get name from profile, auth metadata, or email
         const userName = profile?.full_name 
@@ -122,7 +122,7 @@ export default function DashboardPage() {
         setRole(userRole);
 
         // If no profile exists, create one
-        if (profileError || !profile) {
+        if (!profile) {
           console.log('No profile found, creating one...');
           await supabase.from('profiles').upsert({
             id: authUser.id,
@@ -188,13 +188,18 @@ export default function DashboardPage() {
               console.error('Tenancies error:', e);
             }
 
-            // Count issues
+            // Count issues - select all columns to avoid column name issues
             try {
-              const { data: issues } = await supabase
+              const { data: issues, error: issuesError } = await supabase
                 .from('issues')
-                .select('id, property_id, status');
-              const myIssues = issues?.filter(i => propIds.includes(i.property_id) && ['open', 'in_progress'].includes(i.status)) || [];
-              newStats.openIssues = myIssues.length;
+                .select('*');
+              if (!issuesError && issues) {
+                const myIssues = issues.filter(i => 
+                  propIds.includes(i.property_id) && 
+                  ['open', 'in_progress'].includes(i.status || '')
+                );
+                newStats.openIssues = myIssues.length;
+              }
             } catch (e) {
               console.error('Issues error:', e);
             }
@@ -204,12 +209,14 @@ export default function DashboardPage() {
         console.error('Stats load failed:', e);
       }
 
-      // Count quotes - simplified
+      // Count quotes - select all to avoid column issues
       try {
-        const { data: quotes } = await supabase
+        const { data: quotes, error: quotesError } = await supabase
           .from('quotes')
-          .select('id, status');
-        newStats.pendingQuotes = quotes?.filter(q => q.status === 'pending').length || 0;
+          .select('*');
+        if (!quotesError && quotes) {
+          newStats.pendingQuotes = quotes.filter(q => q.status === 'pending').length;
+        }
       } catch (e) {
         console.error('Quotes error:', e);
       }
@@ -234,17 +241,17 @@ export default function DashboardPage() {
 
   async function loadActivity(supabase: ReturnType<typeof createClient>, userId: string) {
     try {
-      // Fetch recent issues
+      // Fetch recent issues - use * to avoid column issues
       const { data: recentIssues } = await supabase
         .from('issues')
-        .select('id, title, status, created_at')
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(3);
 
-      // Fetch recent tenancies
+      // Fetch recent tenancies - use * to avoid column issues
       const { data: recentTenancies } = await supabase
         .from('tenancies')
-        .select('id, status, start_date, created_at')
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(2);
 
