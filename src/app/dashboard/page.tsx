@@ -161,10 +161,15 @@ export default function DashboardPage() {
 
     if (userRole === 'landlord') {
       // Count properties
-      const { count: propCount } = await supabase
+      const { count: propCount, error: propError } = await supabase
         .from('properties')
         .select('*', { count: 'exact', head: true })
         .eq('landlord_id', userId);
+      
+      if (propError) {
+        console.error('Property count error:', propError);
+      }
+      console.log('Property count result:', { propCount, userId });
       newStats.properties = propCount || 0;
 
       // Get property IDs for this landlord
