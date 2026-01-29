@@ -6,12 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { RoleNavigation, RoleQuickActions, RoleBadge } from "@/components/RoleNavigation";
 import { 
   Home, Key, Wrench, AlertTriangle, FileText, 
   MessageSquare, Briefcase, Star, Plus, ClipboardList,
   LogOut, Building2, User, Calendar, Settings, Users, Receipt
 } from "lucide-react";
+import { Suspense } from "react";
 
 // Animation variants
 const containerVariants: Variants = {
@@ -274,24 +277,15 @@ export default function DashboardPage() {
       </motion.header>
 
       <div className="flex">
-        {/* Sidebar Navigation */}
+        {/* Sidebar Navigation - Role-based */}
         <aside className="hidden md:flex flex-col w-64 min-h-[calc(100vh-73px)] bg-white border-r border-slate-200 p-4">
-          <nav className="space-y-1">
-            <NavLink href="/dashboard" icon={Home} label="Dashboard" active />
-            <NavLink href="/properties" icon={Building2} label="Properties" />
-            <NavLink href="/tenancies" icon={Users} label="Tenancies" />
-            <NavLink href="/issues" icon={Wrench} label="Issues" />
-            <NavLink href="/tenders" icon={Briefcase} label="Tenders" />
-            <NavLink href="/quotes" icon={Receipt} label="Quotes" />
-            <NavLink href="/compliance" icon={AlertTriangle} label="Compliance" />
-            <NavLink href="/reviews" icon={Star} label="Reviews" />
-            <NavLink href="/calendar" icon={Calendar} label="Calendar" />
-            
-            <div className="pt-4 border-t border-slate-200 mt-4">
-              <NavLink href="/settings" icon={Settings} label="Settings" />
-              <NavLink href="/pricing" icon={Star} label="Upgrade" />
-            </div>
-          </nav>
+          <div className="mb-4">
+            <RoleBadge role={role} />
+          </div>
+          <RoleNavigation role={role} />
+          <div className="mt-auto pt-4 border-t border-slate-200">
+            <NavLink href="/pricing" icon={Star} label="Upgrade" />
+          </div>
         </aside>
 
         {/* Main Content */}
@@ -323,15 +317,35 @@ export default function DashboardPage() {
                   <p className="text-slate-600">Here's your property management overview.</p>
                 </motion.div>
 
-                {/* Stats Grid */}
+                {/* Stats Grid - Role-specific */}
                 <motion.div 
                   className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
                   variants={containerVariants}
                 >
-                  <StatCard title="Properties" value={stats.properties.toString()} icon={Home} color="blue" />
-                  <StatCard title="Active Tenancies" value={stats.tenancies.toString()} icon={ClipboardList} color="green" />
-                  <StatCard title="Open Issues" value={stats.openIssues.toString()} icon={Wrench} color="orange" />
-                  <StatCard title="Compliance Alerts" value={stats.complianceAlerts.toString()} icon={AlertTriangle} color="red" />
+                  {role === 'landlord' && (
+                    <>
+                      <StatCard title="Properties" value={stats.properties.toString()} icon={Home} color="blue" />
+                      <StatCard title="Active Tenancies" value={stats.tenancies.toString()} icon={ClipboardList} color="green" />
+                      <StatCard title="Open Issues" value={stats.openIssues.toString()} icon={Wrench} color="orange" />
+                      <StatCard title="Compliance Alerts" value={stats.complianceAlerts.toString()} icon={AlertTriangle} color="red" />
+                    </>
+                  )}
+                  {role === 'tenant' && (
+                    <>
+                      <StatCard title="Open Issues" value={stats.openIssues.toString()} icon={Wrench} color="orange" />
+                      <StatCard title="Documents" value="0" icon={FileText} color="blue" />
+                      <StatCard title="Messages" value="0" icon={MessageSquare} color="green" />
+                      <StatCard title="Reviews" value="0" icon={Star} color="purple" />
+                    </>
+                  )}
+                  {role === 'contractor' && (
+                    <>
+                      <StatCard title="Available Jobs" value="0" icon={Briefcase} color="blue" />
+                      <StatCard title="Pending Quotes" value={stats.pendingQuotes.toString()} icon={Receipt} color="orange" />
+                      <StatCard title="Active Jobs" value="0" icon={Wrench} color="green" />
+                      <StatCard title="Reviews" value="0" icon={Star} color="purple" />
+                    </>
+                  )}
                 </motion.div>
 
                 {/* Quick Actions + Activity */}
@@ -340,14 +354,10 @@ export default function DashboardPage() {
                     <Card className="border-0 shadow-xl bg-white/70 backdrop-blur">
                       <CardHeader className="pb-4">
                         <CardTitle className="text-xl">Quick Actions</CardTitle>
-                        <CardDescription>Common tasks</CardDescription>
+                        <CardDescription>Common tasks for {role}s</CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-2">
-                        <QuickAction href="/properties/new" icon={Plus} label="Add Property" />
-                        <QuickAction href="/tenancies" icon={Users} label="Manage Tenancies" />
-                        <QuickAction href="/issues/new" icon={Wrench} label="Report Issue" />
-                        <QuickAction href="/reviews" icon={Star} label="View Reviews" />
-                        <QuickAction href="/compliance" icon={AlertTriangle} label="Check Compliance" />
+                      <CardContent>
+                        <RoleQuickActions role={role} />
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -409,6 +419,7 @@ function StatCard({ title, value, icon: Icon, color }: { title: string; value: s
     green: "from-emerald-500 to-emerald-600",
     orange: "from-orange-500 to-orange-600",
     red: "from-red-500 to-red-600",
+    purple: "from-purple-500 to-purple-600",
   };
 
   return (
