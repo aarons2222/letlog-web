@@ -1,8 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripeServer, getPlanById } from '@/lib/stripe/config';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimit, getClientId } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 5 checkout attempts per minute per IP
+  const clientId = getClientId(req.headers);
+  const { success, remaining } = rateLimit(`checkout:${clientId}`, { 
+    limit: 5, 
+    windowSeconds: 60 
+  });
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { 
+        status: 429,
+        headers: { 'X-RateLimit-Remaining': '0' }
+      }
+    );
+  }
+
   try {
     const { priceId, planId } = await req.json();
     
