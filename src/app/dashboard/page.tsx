@@ -81,18 +81,24 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const supabase = createClient();
+    let mounted = true;
+
     async function loadDashboard() {
-      const supabase = createClient();
+      if (!mounted) return;
       
       try {
-        // Refresh session first to ensure RLS works
-        await supabase.auth.refreshSession();
+        // Get session - wait for it to be ready
+        const { data: { session } } = await supabase.auth.getSession();
         
-        // Get current user
-        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+        if (!session) {
+          // Not logged in yet, wait for auth state change
+          return;
+        }
+
+        const authUser = session.user;
         
-        if (authError || !authUser) {
-          // Redirect to login if not authenticated
+        if (!authUser) {
           window.location.href = '/login';
           return;
         }
@@ -147,11 +153,24 @@ export default function DashboardPage() {
         console.error('Dashboard load error:', err);
         setError('Failed to load dashboard data');
       } finally {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       }
     }
 
+    // Listen for auth state changes (handles fresh login)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        loadDashboard();
+      }
+    });
+
+    // Initial load
     loadDashboard();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function loadStats(supabase: ReturnType<typeof createClient>, userId: string, userRole: Role) {
