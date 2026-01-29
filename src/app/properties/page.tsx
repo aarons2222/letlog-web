@@ -71,22 +71,12 @@ export default function PropertiesPage() {
           return;
         }
 
-        // Fetch properties - try landlord_id first, then user_id
-        let { data: propertiesData, error: propError } = await supabase
+        // Fetch properties for this landlord
+        const { data: propertiesData } = await supabase
           .from('properties')
           .select('*')
           .eq('landlord_id', user.id)
           .order('created_at', { ascending: false });
-
-        if (propError || !propertiesData?.length) {
-          // Try user_id if landlord_id didn't work
-          const { data: props2 } = await supabase
-            .from('properties')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
-          propertiesData = props2;
-        }
 
         if (!propertiesData) {
           setProperties([]);

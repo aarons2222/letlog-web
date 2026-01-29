@@ -157,28 +157,18 @@ export default function DashboardPage() {
     };
 
     if (userRole === 'landlord') {
-      // Count properties - try landlord_id first, then user_id
-      const { count: propCount, error: propError } = await supabase
+      // Count properties
+      const { count: propCount } = await supabase
         .from('properties')
         .select('*', { count: 'exact', head: true })
         .eq('landlord_id', userId);
-      
-      if (propError) {
-        // Maybe column is user_id instead
-        const { count: propCount2 } = await supabase
-          .from('properties')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', userId);
-        newStats.properties = propCount2 || 0;
-      } else {
-        newStats.properties = propCount || 0;
-      }
+      newStats.properties = propCount || 0;
 
-      // Count active tenancies for this landlord's properties
+      // Get property IDs for this landlord
       const { data: propIds } = await supabase
         .from('properties')
         .select('id')
-        .or(`landlord_id.eq.${userId},user_id.eq.${userId}`);
+        .eq('landlord_id', userId);
       
       if (propIds && propIds.length > 0) {
         const ids = propIds.map(p => p.id);
