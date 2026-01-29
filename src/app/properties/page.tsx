@@ -318,82 +318,85 @@ function PropertyCard({ property }: { property: Property }) {
     <motion.div variants={itemVariants} layout>
       <Link href={`/properties/${property.id}`}>
         <Card className="border-0 shadow-lg bg-white/70 backdrop-blur hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
-          {/* Property Image Placeholder */}
-          <div className="h-32 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center relative">
-            <span className="text-4xl">{getPropertyIcon(property.property_type)}</span>
-            <div className="absolute top-2 right-2">
-              <Badge variant={property.status === 'occupied' ? 'default' : 'secondary'}>
-                {property.status === 'occupied' ? 'Occupied' : 'Vacant'}
-              </Badge>
-            </div>
-          </div>
-          
           <CardContent className="p-4">
-            <div className="flex justify-between items-start mb-2">
+            {/* Mobile-first horizontal layout */}
+            <div className="flex gap-3">
+              {/* Compact icon */}
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center flex-shrink-0">
+                <span className="text-xl">{getPropertyIcon(property.property_type)}</span>
+              </div>
+              
+              {/* Content */}
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-slate-800 truncate">
-                  {property.address_line_1}
-                </h3>
-                {property.address_line_2 && (
-                  <p className="text-sm text-slate-500 truncate">{property.address_line_2}</p>
-                )}
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
-                    <Eye className="w-4 h-4 mr-2" /> View
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Edit className="w-4 h-4 mr-2" /> Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-red-600">
-                    <Trash2 className="w-4 h-4 mr-2" /> Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
-            <div className="flex items-center gap-1 text-sm text-slate-500 mb-3">
-              <MapPin className="w-3 h-3" />
-              <span className="truncate">{property.city}, {property.postcode}</span>
-            </div>
-
-            <div className="flex items-center gap-4 text-sm text-slate-600 mb-3">
-              <div className="flex items-center gap-1">
-                <Bed className="w-4 h-4" />
-                <span>{property.bedrooms}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Bath className="w-4 h-4" />
-                <span>{property.bathrooms}</span>
-              </div>
-              {property.tenant_count ? (
-                <div className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  <span>{property.tenant_count}</span>
+                {/* Address + menu */}
+                <div className="flex justify-between items-start gap-2">
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-slate-800 text-sm leading-tight">
+                      {property.address_line_1}
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      {property.city}, {property.postcode}
+                    </p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <Eye className="w-4 h-4 mr-2" /> View
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Edit className="w-4 h-4 mr-2" /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600">
+                        <Trash2 className="w-4 h-4 mr-2" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-              ) : null}
-            </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-              {property.rent_amount ? (
-                <span className="font-semibold text-slate-800">
-                  £{property.rent_amount.toLocaleString()}/mo
-                </span>
-              ) : (
-                <span className="text-slate-400 text-sm">No rent set</span>
-              )}
-              <Badge className={getComplianceColor(property.compliance_status)}>
-                {property.compliance_status === 'valid' && '✓ Compliant'}
-                {property.compliance_status === 'expiring' && '⚠ Expiring'}
-                {property.compliance_status === 'expired' && '✗ Expired'}
-                {!property.compliance_status && 'Unknown'}
-              </Badge>
+                {/* Stats row */}
+                <div className="flex items-center gap-3 mt-2 text-xs text-slate-600">
+                  <span className="flex items-center gap-1">
+                    <Bed className="w-3 h-3" /> {property.bedrooms} bed
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Bath className="w-3 h-3" /> {property.bathrooms} bath
+                  </span>
+                  {property.tenant_count ? (
+                    <span className="flex items-center gap-1">
+                      <Users className="w-3 h-3" /> {property.tenant_count}
+                    </span>
+                  ) : null}
+                  {property.rent_amount ? (
+                    <span className="font-medium text-slate-800">
+                      £{property.rent_amount.toLocaleString()}/mo
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* Badges */}
+                <div className="flex gap-2 mt-2">
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs px-2 py-0 ${property.status === 'occupied' ? 'border-green-300 text-green-700 bg-green-50' : 'border-orange-300 text-orange-700 bg-orange-50'}`}
+                  >
+                    {property.status === 'occupied' ? 'Occupied' : 'Vacant'}
+                  </Badge>
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs px-2 py-0 ${getComplianceColor(property.compliance_status)}`}
+                  >
+                    {property.compliance_status === 'valid' && 'Compliant'}
+                    {property.compliance_status === 'expiring' && 'Expiring'}
+                    {property.compliance_status === 'expired' && 'Expired'}
+                    {!property.compliance_status && 'Unknown'}
+                  </Badge>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
