@@ -14,9 +14,16 @@ import { DashboardEmptyState } from "@/components/EmptyState";
 import { 
   Home, Key, Wrench, AlertTriangle, FileText, 
   MessageSquare, Briefcase, Star, Plus, ClipboardList,
-  LogOut, Building2, User, Calendar, Settings, Users, Receipt
+  LogOut, Building2, User, Calendar, Settings, Users, Receipt, Bell
 } from "lucide-react";
 import { Suspense } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Animation variants
 const containerVariants: Variants = {
@@ -358,14 +365,46 @@ export default function DashboardPage() {
               <p className="text-sm font-medium text-slate-700">{user?.full_name}</p>
               <p className="text-xs text-slate-500">{user?.email}</p>
             </div>
-            <Link href="/settings">
-              <motion.div 
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center cursor-pointer"
-                whileHover={{ scale: 1.1 }}
-              >
-                <User className="w-5 h-5 text-slate-600" />
-              </motion.div>
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <motion.div 
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center cursor-pointer"
+                  whileHover={{ scale: 1.1 }}
+                >
+                  <User className="w-5 h-5 text-slate-600" />
+                </motion.div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-2 border-b border-slate-100">
+                  <p className="text-sm font-medium text-slate-800">{user?.full_name}</p>
+                  <p className="text-xs text-slate-500">{user?.email}</p>
+                </div>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings" className="cursor-pointer">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/notifications" className="cursor-pointer">
+                    <Bell className="w-4 h-4 mr-2" />
+                    Notifications
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="text-red-600 cursor-pointer"
+                  onClick={async () => {
+                    const supabase = createClient();
+                    await supabase.auth.signOut();
+                    window.location.href = '/login';
+                  }}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </motion.header>
